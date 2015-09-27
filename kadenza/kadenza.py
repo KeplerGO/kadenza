@@ -6,6 +6,7 @@ Author: Geert Barentsen
 import os
 import re
 import datetime
+import argparse
 
 import numpy as np
 
@@ -17,11 +18,11 @@ from astropy.utils.console import ProgressBar
 class PixelMappingFile():
     """Wraps a Kepler Pixel Mapping Reference file.
 
-    A pixel mapping reference file describes the relationship between th
+    A pixel mapping reference file describes the relationship between the
     pixel values recorded in a Cadence Data File and the pixel positions
     on the Kepler CCDs.  These files tend to have the suffix
         "*_lcm.fits"
-    for long cadence and
+    for long cadence, or
         "*_scm.fits"
     for short cadence data.
 
@@ -32,6 +33,7 @@ class PixelMappingFile():
     """
     def __init__(self, filename):
         self.filename = filename
+        log.info(filename)
         self.hdulist = fits.open(filename)
         self.targets = self._targets()
 
@@ -104,7 +106,9 @@ class TargetPixelFileFactory(object):
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
 
         self.no_cadences = len(self.cadence_pixel_files)
-        self.template = fits.open("tpf-template.fits.gz")
+        template_fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                   "tpf-template.fits.gz")
+        self.template = fits.open(template_fn)
 
     def make_tpf(self, target_id):
         tpf = fits.HDUList(self._make_primary_hdu(target_id))
@@ -357,7 +361,7 @@ class TargetPixelFileFactory(object):
         return (hdu, aper_hdu)
 
 
-"""Helper functions"""
+""" Helper functions """
 
 
 def target_name(target_id):
@@ -372,6 +376,30 @@ def ccd2mask(crpix1, crpix2, crval1, crval2,
     mask_column = (ccd_column - crval1) * cdelt1 + crpix1 - 1
     mask_row = (ccd_row - crval2) * cdelt2 + crpix2 - 1
     return mask_column, mask_row
+
+
+""" Command-line interface """
+
+
+def kadenza_tpf_main(args=None):
+    parser = argparse.ArgumentParser(
+                description="Turn raw Kepler Cadence Data into "
+                            "uncalibrated Target Pixel Files (TPF).")
+    parser.add_argument("-t", "--target", metavar='target_id', nargs="?",
+                        help="only produce a TPF file "
+                             "for a specific EPIC/KIC target_id")
+    parser.add_argument('cadencefile_list', nargs=1,
+                        help="path to a text file that lists "
+                             "the '*_lcs-targ.fits' cadence data files to use")
+    parser.add_argument('pixelmap_file', nargs=1,
+                        help="path to the '*_lcm.fits' pixel mapping reference file")
+    args = parser.parse_args(args)
+
+    factory = TargetPixelFileFactory(args.cadencefile_list[0],
+                                     args.pixelmap_file[0])
+    # TODO: do all target_id's by default
+    target_id = list(factory.pixel_mapping.targets.keys())[5]
+    factory.save_tpf(target_id)
 
 
 if __name__ == "__main__":

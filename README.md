@@ -11,8 +11,10 @@ to enable time-critical data analyses to be carried out quickly.
 The primary motivation for creating this tool is to
 enable the K2 Campaign 9 microlensing science team to use the raw
 spacecraft data to identify microlensing events as soon as possible.
-Most other users of Kepler/K2 data will not require this tool,
-because it does *not* produce properly calibrated files.
+It also enables access to the dithering data which was obtained during
+the original comissioning of the Kepler mission.
+Most users of Kepler/K2 data will not require this tool however,
+because it does ***not*** produce properly calibrated files.
 
 Kadenza can be used both as a command-line tool or using its Python API.
 
@@ -39,7 +41,23 @@ Kadenza has only been tested under Linux with Python 3.4 at present.
 Support for legacy Python will be added soon.
 
 ### Using kadenza
-TODO: insert a few usage examples here, including the output of `--help`.
+```
+$ kadenza-tpf --help
+usage: kadenza-tpf [-h] [-t [target_id]] cadencefile_list pixelmap_file
+
+Turn raw Kepler Cadence Data into uncalibrated Target Pixel Files (TPF).
+
+positional arguments:
+  cadencefile_list      path to a text file that lists the '*_lcs-targ.fits'
+                        cadence data files to use
+  pixelmap_file         path to the '*_lcm.fits' pixel mapping reference file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -t [target_id], --target [target_id]
+                        only produce a TPF file for a specific EPIC/KIC
+                        target_id
+```
 
 ### Contributing
 To report bugs and request features, please use the [issue tracker](https://github.com/KeplerGO/kadenza/issues) or open a pull request.
