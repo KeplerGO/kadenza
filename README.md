@@ -1,14 +1,16 @@
-# kadenza: Kepler/K2 Cadence Data Reader 
-***Converts raw cadence target data from the Kepler space telescope into astronomer-friendly FITS files.***
+# Kadenza: Kepler/K2 Cadence Data Reader 
+***Converts raw cadence data from the Kepler spacecraft into astronomer-friendly FITS files.***
 
 [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 
-Kadenza allows the raw cadence pixel data from the Kepler spacecraft
-tobe inspected as soon as it arrives on Earth;
-bypassing the (time-consuming) standard pipeline to enable time-critical
-data analyses. The primary motivation for creating this tool is to
+Kadenza allows the raw cadence pixel data from the Kepler space telescope
+to be inspected as soon as it arrives on Earth;
+bypassing the (somewhat time-consuming) standard pipeline processing
+to enable time-critical data analyses to be carried out.
+
+The primary motivation for creating this tool is to
 enable the K2 Campaign 9 microlensing science team to use the raw
-data to identify microlensing events as quickly as possible.
+spacecraft data to identify microlensing events as quickly as possible.
 
 Kadenza can be used both as a command-line tool or using its Python API.
 
