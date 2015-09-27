@@ -4,13 +4,15 @@
 [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 
 Kadenza allows the raw cadence pixel data from the Kepler space telescope
-to be inspected as soon as it arrives on Earth;
-bypassing the (somewhat time-consuming) standard pipeline processing
-to enable time-critical data analyses to be carried out.
+to be inspected as soon as they arrive on Earth;
+bypassing the (time-consuming) standard pipeline processing
+to enable time-critical data analyses to be carried out quickly.
 
 The primary motivation for creating this tool is to
 enable the K2 Campaign 9 microlensing science team to use the raw
-spacecraft data to identify microlensing events as quickly as possible.
+spacecraft data to identify microlensing events as soon as possible.
+Most other users of Kepler/K2 data will not require this tool,
+because it does *not* produce properly calibrated files.
 
 Kadenza can be used both as a command-line tool or using its Python API.
 
