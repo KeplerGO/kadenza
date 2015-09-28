@@ -33,8 +33,8 @@ $ kadenza-ffi --channel 10 cadence-data-file.fits pixel-mapping-file.fits
 If you have a working installation of Python on your system,
 you can download and install the latest version as follows:
 ```
-$ git clone https://github.com/barentsen/k2flix.git
-$ cd k2flix
+$ git clone https://github.com/KeplerGO/kadenza.git
+$ cd kadenza
 $ python setup.py install
 ```
 Kadenza has only been tested under Linux with Python 3.4 at present.

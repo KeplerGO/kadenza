@@ -33,31 +33,22 @@ class PixelMappingFile():
     """
     def __init__(self, filename):
         self.filename = filename
-        log.info(filename)
-        self.hdulist = fits.open(filename)
         self.targets = self._targets()
 
     def _targets(self):
         """Returns a dict mapping target_id => extension/channel number."""
+        fts = fits.open(self.filename)
         targets = {}
-        for ext in range(1, len(self.hdulist)):
-            target_ids = np.unique(self.hdulist[ext].data['target_id'])
-            targets.update(zip(target_ids, [ext]*len(target_ids)))
+        for ext in range(1, len(fts)):
+            for target_id in np.unique(fts[ext].data['target_id']):
+                targets[target_id] = {
+                                        "ext": ext,
+                                        "channel": fts[ext].header['CHANNEL'],
+                                        "module": fts[ext].header['MODULE'],
+                                        "output": fts[ext].header['OUTPUT']
+                }
+        fts.close()
         return targets
-
-    def get_extension(self, target_id):
-        """Returns the extension/channel number for a target."""
-        return self.targets[target_id]
-
-    def get_channel(self, target_id):
-        # Note that channel == extension number ... or so we believe!
-        return self.hdulist[self.get_extension(target_id)].header['CHANNEL']
-
-    def get_module(self, target_id):
-        return self.hdulist[self.get_extension(target_id)].header['MODULE']
-
-    def get_output(self, target_id):
-        return self.hdulist[self.get_extension(target_id)].header['OUTPUT']
 
     def get_mapping(self, target_id):
         """Returns the pixel mapping information for a specific target.
@@ -78,10 +69,12 @@ class PixelMappingFile():
         column : `numpy.ndarray`
             Column number for  the pixels indexed by pixel_idx.
         """
-        ext = self.get_extension(target_id)
-        idx = np.where(self.hdulist[ext].data['target_id'] == target_id)[0]
-        row = self.hdulist[ext].data['row'][idx]
-        column = self.hdulist[ext].data['column'][idx]
+        fts = fits.open(self.filename)
+        ext = self.targets[target_id]['ext']
+        idx = np.where(fts[ext].data['target_id'] == target_id)[0]
+        row = fts[ext].data['row'][idx]
+        column = fts[ext].data['column'][idx]
+        fts.close()
         return idx, row, column
 
 
@@ -108,7 +101,16 @@ class TargetPixelFileFactory(object):
         self.no_cadences = len(self.cadence_pixel_files)
         template_fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                    "tpf-template.fits.gz")
-        self.template = fits.open(template_fn)
+        self.template = self._template(template_fn)
+
+    def _template(self, template_fn):
+        """Returns a dict with a template TPF header"""
+        tpf_template = fits.open(template_fn)
+        template = {}
+        for ext in range(3):
+            template[ext] = tpf_template[ext].header.copy()
+        tpf_template.close()
+        return template
 
     def make_tpf(self, target_id):
         tpf = fits.HDUList(self._make_primary_hdu(target_id))
@@ -116,20 +118,23 @@ class TargetPixelFileFactory(object):
             tpf.append(ext)
         return tpf
 
-    def make_all_tpfs(self):
-        pass
+    def write_all_tpfs(self):
+        """Produce TPF files for all targets in the cadence data."""
+        target_ids = list(self.pixel_mapping.targets.keys())
+        log.info("Writing {} Target Pixel Files.".format(len(target_ids)))
+        ProgressBar.map(self.write_tpf, target_ids, multiprocess=True, step=3)
 
-    def save_tpf(self, target_id, output_fn=None):
+    def write_tpf(self, target_id, output_fn=None):
         """Creates and writes a TPF file to disk."""
         basename = os.path.basename(self.cadence_pixel_files[-1])
         lastcad = re.sub('_lcs-targ.fits', '', basename).strip('kplr')
         if output_fn is None:
             output_fn = 'mod{}.{}_kplr{:09d}-{}_lpd-targ.fits'.format(
-                                self.pixel_mapping.get_module(target_id),
-                                self.pixel_mapping.get_module(target_id),
-                                target_id,
-                                lastcad)
-        log.info("Writing {}".format(output_fn))
+                            self.pixel_mapping.targets[target_id]['module'],
+                            self.pixel_mapping.targets[target_id]['output'],
+                            target_id,
+                            lastcad)
+        log.debug("Writing {}".format(output_fn))
         self.make_tpf(target_id).writeto(output_fn,
                                          clobber=True,
                                          checksum=True)
@@ -138,7 +143,7 @@ class TargetPixelFileFactory(object):
         """Returns the primary extension of a Target Pixel File."""
         hdu = fits.PrimaryHDU()
         # Copy the default keywords from a template file from the MAST archive
-        tmpl = self.template[0].header
+        tmpl = self.template[0]
         for kw in tmpl:
             if kw in ['CHECKSUM']:  # TODO: can this be removed?
                 continue
@@ -151,9 +156,9 @@ class TargetPixelFileFactory(object):
         hdu.header['TIMVERSN'] = ""
         hdu.header['OBJECT'] = target_name(target_id)
         hdu.header['KEPLERID'] = target_id
-        hdu.header['CHANNEL'] = self.pixel_mapping.get_channel(target_id)
-        hdu.header['MODULE'] = self.pixel_mapping.get_module(target_id)
-        hdu.header['OUTPUT'] = self.pixel_mapping.get_output(target_id)
+        hdu.header['CHANNEL'] = self.pixel_mapping.targets[target_id]['channel']
+        hdu.header['MODULE'] = self.pixel_mapping.targets[target_id]['module']
+        hdu.header['OUTPUT'] = self.pixel_mapping.targets[target_id]['output']
         return hdu
 
     def _make_extensions(self, target_id):
@@ -189,7 +194,7 @@ class TargetPixelFileFactory(object):
         pos_corr2 = np.zeros((self.no_cadences), dtype='float32')
 
         # Open the cadence data files and copy data across
-        channel = self.pixel_mapping.get_channel(target_id)
+        channel = self.pixel_mapping.targets[target_id]['channel']
         for cad_idx, fn in enumerate(self.cadence_pixel_files):
             log.debug("Opening {}".format(fn))
             cadfile = fits.open(fn)
@@ -254,7 +259,7 @@ class TargetPixelFileFactory(object):
         hdu = fits.BinTableHDU.from_columns(coldefs)
 
         # Set the header with defaults
-        tmpl = self.template[1].header
+        tmpl = self.template[1] #.header
         for i, kw in enumerate(tmpl):
             if kw in ['XTENSION', 'CHECKSUM', 'KEPLERID', 'NAXIS1']:
                 continue
@@ -397,16 +402,18 @@ def kadenza_tpf_main(args=None):
 
     factory = TargetPixelFileFactory(args.cadencefile_list[0],
                                      args.pixelmap_file[0])
-    # TODO: do all target_id's by default
-    target_id = list(factory.pixel_mapping.targets.keys())[5]
-    factory.save_tpf(target_id)
+    if args.target is None:
+        factory.write_all_tpfs()
+    else:
+        factory.write_tpf(args.target)
 
 
 if __name__ == "__main__":
     # Example use
-    cadence_files = "filelist-all.txt"
+    cadence_files = "../sandbox/filenames-short.txt"
     pixel_mapping = "../sandbox/pixel-mappings/kplr2009115065205-013-013_lcm.fits"
     factory = TargetPixelFileFactory(cadence_files, pixel_mapping)
     # Get an arbitrary target_id
     target_id = list(factory.pixel_mapping.targets.keys())[5]
-    factory.save_tpf(target_id)
+    #factory.write_tpf(target_id)
+    factory.write_all_tpfs()
