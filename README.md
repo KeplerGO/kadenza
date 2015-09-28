@@ -74,6 +74,16 @@ optional arguments:
   -h, --help     show this help message and exit
 ```
 
+### Caveats
+
+There are two main caveats to be aware of:
+ * The present version does not set all header keywords exactly as they would
+   appear in an official product.  In particular, the WCS keywords are
+   untested.
+ * This tool does *not* calibrate the data at all, it merely serves to
+   transform the raw pixel counts into a FITS format that is similar to,
+   but not at all identical, to the official pipeline products.
+
 ### Contributing
 To report bugs and request features, please use the [issue tracker](https://github.com/KeplerGO/kadenza/issues) or open a pull request.
 

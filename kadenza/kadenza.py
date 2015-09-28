@@ -145,12 +145,15 @@ class TargetPixelFileFactory(object):
         hdu.header['CREATOR'] = "kadenza"
         hdu.header['PROCVER'] = "1.0"
         hdu.header['FILEVER'] = "0.0"
-        hdu.header['TIMVERSN'] = ""
         hdu.header['OBJECT'] = target_name(target_id)
         hdu.header['KEPLERID'] = target_id
         hdu.header['CHANNEL'] = self.pixel_mapping.targets[target_id]['channel']
         hdu.header['MODULE'] = self.pixel_mapping.targets[target_id]['module']
         hdu.header['OUTPUT'] = self.pixel_mapping.targets[target_id]['output']
+        # Empty a bunch of keywords rather than having incorrect info
+        for kw in ["TIMVERSN", "CAMPAIGN", "DATA_REL", "TTABLEID",
+                   "RA_OBJ", "DEC_OBJ"]:
+            hdu.header[kw] = ""
         return hdu
 
     def _make_extensions(self, target_id):
@@ -230,7 +233,7 @@ class TargetPixelFileFactory(object):
         cols.append(fits.Column(name='TIMECORR', format='E', unit='D',
                                 array=timecorr))
         cols.append(fits.Column(name='CADENCENO', format='J', array=cadenceno))
-        cols.append(fits.Column(name='RAW_CNTS', format=jformat, unit='counts',
+        cols.append(fits.Column(name='RAW_CNTS', format=jformat, unit='count',
                                 dim=coldim, array=raw_cnts))
         cols.append(fits.Column(name='FLUX', format=eformat, unit='e-/s',
                                 dim=coldim, array=flux))
@@ -251,9 +254,9 @@ class TargetPixelFileFactory(object):
         hdu = fits.BinTableHDU.from_columns(coldefs)
 
         # Set the header with defaults
-        tmpl = tmpl = self.get_header_template(1)
+        tmpl = self.get_header_template(1)
         for i, kw in enumerate(tmpl):
-            if kw in ['XTENSION', 'KEPLERID', 'NAXIS1']:
+            if kw in ['XTENSION', 'KEPLERID', 'NAXIS1', 'NAXIS2']:
                 continue
             hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
         # Override the defaults where necessary
@@ -398,6 +401,12 @@ class FullFrameImageFactory(object):
 
     def _make_hdulist(self):
         hdu0 = fits.PrimaryHDU()
+
+        # Set the header with defaults
+        tmpl = self.get_header_template(0)
+        for i, kw in enumerate(tmpl):
+            hdu0.header[kw] = (tmpl[kw], tmpl.comments[kw])
+
         hdulist = fits.HDUList(hdu0)
 
         # open the Cadence Pixel File and Pixel Mapping File
@@ -442,6 +451,12 @@ class FullFrameImageFactory(object):
 
             # create image extension headers
             hdu = fits.ImageHDU(ffimage)
+
+            # Set the header with defaults
+            tmpl = self.get_header_template(ext)
+            for i, kw in enumerate(tmpl):
+                hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
+            # Overrides:
             hdu.header['EXTNAME'] = 'MOD.OUT %d.%d' % (modkey, outkey)
             hdu.header['CHANNEL'] = chankey
             hdu.header['MODULE'] = modkey
@@ -458,7 +473,7 @@ class FullFrameImageFactory(object):
             hdu.header['TIMEDEL'] = telapse
             hdu.header['DATE-OBS'] = ''
             hdu.header['DATE-END'] = '%sT%sZ' % (dateobs, timeobs)
-            hdu.header['BUNIT'] = "counts"
+            hdu.header['BUNIT'] = "count"
             hdu.header['BARYCORR'] = -1.0
             hdu.header['BACKAPP'] = False
             hdu.header['DEADAPP'] = True
@@ -467,6 +482,7 @@ class FullFrameImageFactory(object):
             hdu.header['READNOIS'] = readnois
             hdu.header['TIMSLICE'] = timslice
             hdu.header['MEANBLCK'] = meanblck
+            hdu.header['NPIXSAP'] = ""
 
             hdulist.append(hdu)
 
