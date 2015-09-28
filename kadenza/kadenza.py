@@ -131,7 +131,7 @@ class TargetPixelFileFactory(object):
         """Produce TPF files for all targets in the cadence data."""
         target_ids = list(self.pixel_mapping.targets.keys())
         log.info("Writing {} Target Pixel Files.".format(len(target_ids)))
-        ProgressBar.map(self.write_tpf, target_ids, multiprocess=True, step=3)
+        ProgressBar.map(self.write_tpf, target_ids, multiprocess=True)
 
     def _make_primary_hdu(self, target_id):
         """Returns the primary extension of a Target Pixel File."""
@@ -481,7 +481,7 @@ class FullFrameImageFactory(object):
 
 def target_name(target_id):
     """Returns the target name, 'KIC {target_id}' or 'EPIC {target_id}'."""
-    if int(target_id) < 2e9:
+    if int(target_id) < 2e8:
         return "KIC {}".format(target_id)
     return "EPIC {}".format(target_id)
 
@@ -500,7 +500,8 @@ def kadenza_tpf_main(args=None):
     parser = argparse.ArgumentParser(
                 description="Turn raw Kepler Cadence Data into "
                             "uncalibrated Target Pixel Files (TPF).")
-    parser.add_argument("-t", "--target", metavar='target_id', nargs="?",
+    parser.add_argument("-t", "--target", metavar='target_id',
+                        nargs="?", type=int,
                         help="only produce a TPF file "
                              "for a specific EPIC/KIC target_id")
     parser.add_argument('cadencefile_list', nargs=1,
@@ -511,7 +512,12 @@ def kadenza_tpf_main(args=None):
                              "pixel mapping reference file")
     args = parser.parse_args(args)
 
-    factory = TargetPixelFileFactory(args.cadencefile_list[0],
+    # Allow cadence file to be given rather than a list
+    if args.cadencefile_list[0].endswith("lcs-targ.fits"):
+        cflist = args.cadencefile_list
+    else:
+        cflist = args.cadencefile_list[0]
+    factory = TargetPixelFileFactory(cflist,
                                      args.pixelmap_file[0])
     if args.target is None:
         factory.write_all_tpfs()
