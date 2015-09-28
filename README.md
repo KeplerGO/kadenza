@@ -26,7 +26,7 @@ $ kadenza-tpf --target 200049143 cadence-data-list.txt pixel-mapping-file.fits
 
 Produce a sparse FFI frame for a given channel:
 ```
-$ kadenza-ffi --channel 10 cadence-data-file.fits pixel-mapping-file.fits
+$ kadenza-ffi cadence-data-file.fits pixel-mapping-file.fits
 ``` 
 
 ### Installation
@@ -57,6 +57,21 @@ optional arguments:
   -t [target_id], --target [target_id]
                         only produce a TPF file for a specific EPIC/KIC
                         target_id
+```
+
+```
+$ kadenza-ffi --help
+usage: kadenza-ffi [-h] cadence_file pixelmap_file
+
+Turns a raw Kepler Cadence Data file into an uncalibrated Full Frame Image
+(FFI).
+
+positional arguments:
+  cadence_file   path to the '*_lcs-targ.fits' cadence data file
+  pixelmap_file  path to the '*_lcm.fits' pixel mapping reference file
+
+optional arguments:
+  -h, --help     show this help message and exit
 ```
 
 ### Contributing

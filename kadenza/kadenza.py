@@ -60,13 +60,13 @@ class PixelMappingFile():
 
         Returns
         -------
-        idx : `numpy.ndarray`
+        idx : `np.ndarray`
             Indexes of the pixel values associated with the target.
 
-        row : `numpy.ndarray`
+        row : `np.ndarray`
             Row numbers for the pixels indexed by pixel_idx.
 
-        column : `numpy.ndarray`
+        column : `np.ndarray`
             Column number for  the pixels indexed by pixel_idx.
         """
         fts = fits.open(self.filename)
@@ -97,32 +97,20 @@ class TargetPixelFileFactory(object):
         else:
             self.cadence_pixel_files = cadence_pixel_files
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
-
         self.no_cadences = len(self.cadence_pixel_files)
-        template_fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                                   "tpf-template.fits.gz")
-        self.template = self._template(template_fn)
 
-    def _template(self, template_fn):
-        """Returns a dict with a template TPF header"""
-        tpf_template = fits.open(template_fn)
-        template = {}
-        for ext in range(3):
-            template[ext] = tpf_template[ext].header.copy()
-        tpf_template.close()
-        return template
+    def get_header_template(self, extension):
+        """Returns a template `fits.Header` object for a given extension."""
+        template_fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                   "header-templates",
+                                   "tpf-ext{}-header.txt".format(extension))
+        return fits.Header.fromtextfile(template_fn)
 
     def make_tpf(self, target_id):
         tpf = fits.HDUList(self._make_primary_hdu(target_id))
         for ext in self._make_extensions(target_id):
             tpf.append(ext)
         return tpf
-
-    def write_all_tpfs(self):
-        """Produce TPF files for all targets in the cadence data."""
-        target_ids = list(self.pixel_mapping.targets.keys())
-        log.info("Writing {} Target Pixel Files.".format(len(target_ids)))
-        ProgressBar.map(self.write_tpf, target_ids, multiprocess=True, step=3)
 
     def write_tpf(self, target_id, output_fn=None):
         """Creates and writes a TPF file to disk."""
@@ -139,14 +127,18 @@ class TargetPixelFileFactory(object):
                                          clobber=True,
                                          checksum=True)
 
+    def write_all_tpfs(self):
+        """Produce TPF files for all targets in the cadence data."""
+        target_ids = list(self.pixel_mapping.targets.keys())
+        log.info("Writing {} Target Pixel Files.".format(len(target_ids)))
+        ProgressBar.map(self.write_tpf, target_ids, multiprocess=True, step=3)
+
     def _make_primary_hdu(self, target_id):
         """Returns the primary extension of a Target Pixel File."""
         hdu = fits.PrimaryHDU()
         # Copy the default keywords from a template file from the MAST archive
-        tmpl = self.template[0]
+        tmpl = self.get_header_template(0)
         for kw in tmpl:
-            if kw in ['CHECKSUM']:  # TODO: can this be removed?
-                continue
             hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
         # Override the defaults where necessary
         hdu.header['DATE'] = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -259,9 +251,9 @@ class TargetPixelFileFactory(object):
         hdu = fits.BinTableHDU.from_columns(coldefs)
 
         # Set the header with defaults
-        tmpl = self.template[1] #.header
+        tmpl = tmpl = self.get_header_template(1)
         for i, kw in enumerate(tmpl):
-            if kw in ['XTENSION', 'CHECKSUM', 'KEPLERID', 'NAXIS1']:
+            if kw in ['XTENSION', 'KEPLERID', 'NAXIS1']:
                 continue
             hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
         # Override the defaults where necessary
@@ -347,9 +339,8 @@ class TargetPixelFileFactory(object):
         aper_hdu = fits.ImageHDU(mask)
 
         # Set the header from the template TPF again
+        tmpl = self.get_header_template(2)
         for i, kw in enumerate(tmpl):
-            if kw in ['CHECKSUM']:
-                continue
             aper_hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
 
         aper_hdu.header['OBJECT'] = target_name(target_id)
@@ -364,6 +355,125 @@ class TargetPixelFileFactory(object):
         aper_hdu.header['CRVAL2P'] = crval2p
 
         return (hdu, aper_hdu)
+
+
+class FullFrameImageFactory(object):
+    """
+    Parameters
+    ----------
+    cadence_pixel_file : str
+        Path to the cadence data file.
+
+    pixel_mapping_file : str
+        Path to the pixel mapping file.
+    """
+    def __init__(self, cadence_pixel_file, pixel_mapping_file):
+        self.cadence_pixel_file = cadence_pixel_file
+        self.pixel_mapping_file = pixel_mapping_file
+
+    def get_header_template(self, extension):
+        """Returns a template `fits.Header` object for a given extension."""
+        if extension > 1:
+            extension = 1
+        template_fn = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                   "header-templates",
+                                   "ffi-ext{}-header.txt".format(extension))
+        return fits.Header.fromtextfile(template_fn)
+
+    def make_ffi(self):
+        return self._make_hdulist()
+
+    def write_ffi(self, output_fn=None):
+        """Creates and writes a TPF file to disk."""
+        basename = os.path.basename(self.cadence_pixel_file)
+        lastcad = re.sub('_lcs-targ.fits', '', basename).strip('kplr')
+        if output_fn is None:
+            basename = os.path.basename(self.cadence_pixel_file)
+            if "lcs-targ" in basename:
+                output_fn = basename.replace("lcs-targ", "ffi")
+            else:
+                output_fn = "cadence-ffi.fits"
+        log.info("Writing {}".format(output_fn))
+        self.make_ffi().writeto(output_fn, clobber=True, checksum=True)
+
+    def _make_hdulist(self):
+        hdu0 = fits.PrimaryHDU()
+        hdulist = fits.HDUList(hdu0)
+
+        # open the Cadence Pixel File and Pixel Mapping File
+        incpf = fits.open(self.cadence_pixel_file, memmap=True)
+        inpmrf = fits.open(self.pixel_mapping_file, memmap=True)
+
+        # grab the dates and times from the header
+        card = incpf[0].header
+        startkey = card['STARTIME']
+        endkey = card['END_TIME']
+        dateobs = card['DATE-OBS']
+        timeobs = card['TIME-OBS']
+        tstart = startkey + 2400000.5
+        tstop = endkey + 2400000.5
+        deadc = 0.92063492
+        telapse = tstop - tstart
+        exposure = telapse * deadc
+
+        for ext in ProgressBar(range(1, 85)):
+            card = incpf[ext].header
+            gain = card['GAIN']
+            readnois = card['READNOIS']
+            timslice = card['TIMSLICE']
+            meanblck = card['MEANBLCK']
+
+            card = inpmrf[ext].header
+            chankey = card['CHANNEL']
+            modkey = card['MODULE']
+            outkey = card['OUTPUT']
+            r = inpmrf[ext].data.field('row')[:]
+            c = inpmrf[ext].data.field('column')[:]
+            k = inpmrf[ext].data.field('target_id')[:]
+            f = incpf[ext].data.field('orig_value')[:]
+
+            # initialize FFI image
+            ffimage = np.zeros((1070, 1132), dtype="float32")
+            ffimage[:, :] = np.nan
+
+            # populate FFI image
+            for i in range(len(k)):
+                ffimage[r[i], c[i]] = f[i]
+
+            # create image extension headers
+            hdu = fits.ImageHDU(ffimage)
+            hdu.header['EXTNAME'] = 'MOD.OUT %d.%d' % (modkey, outkey)
+            hdu.header['CHANNEL'] = chankey
+            hdu.header['MODULE'] = modkey
+            hdu.header['OUTPUT'] = outkey
+            hdu.header['MJDSTART'] = startkey
+            hdu.header['MJDEND'] = endkey
+            hdu.header['BJDREFI'] = 2454833
+            hdu.header['BJDREFF'] = 0.0
+            hdu.header['TSTART'] = tstart
+            hdu.header['TSTOP'] = tstop
+            hdu.header['TELAPSE'] = telapse
+            hdu.header['EXPOSURE'] = exposure
+            hdu.header['LIVETIME'] = exposure
+            hdu.header['TIMEDEL'] = telapse
+            hdu.header['DATE-OBS'] = ''
+            hdu.header['DATE-END'] = '%sT%sZ' % (dateobs, timeobs)
+            hdu.header['BUNIT'] = "counts"
+            hdu.header['BARYCORR'] = -1.0
+            hdu.header['BACKAPP'] = False
+            hdu.header['DEADAPP'] = True
+            hdu.header['VIGNAPP'] = False
+            hdu.header['GAIN'] = gain
+            hdu.header['READNOIS'] = readnois
+            hdu.header['TIMSLICE'] = timslice
+            hdu.header['MEANBLCK'] = meanblck
+
+            hdulist.append(hdu)
+
+        incpf.close()
+        inpmrf.close()
+        return hdulist
+
 
 
 """ Helper functions """
@@ -397,7 +507,8 @@ def kadenza_tpf_main(args=None):
                         help="path to a text file that lists "
                              "the '*_lcs-targ.fits' cadence data files to use")
     parser.add_argument('pixelmap_file', nargs=1,
-                        help="path to the '*_lcm.fits' pixel mapping reference file")
+                        help="path to the '*_lcm.fits' "
+                             "pixel mapping reference file")
     args = parser.parse_args(args)
 
     factory = TargetPixelFileFactory(args.cadencefile_list[0],
@@ -408,6 +519,22 @@ def kadenza_tpf_main(args=None):
         factory.write_tpf(args.target)
 
 
+def kadenza_ffi_main(args=None):
+    parser = argparse.ArgumentParser(
+                description="Turns a raw Kepler Cadence Data file into "
+                            "an uncalibrated Full Frame Image (FFI).")
+    parser.add_argument('cadence_file', nargs=1,
+                        help="path to the '*_lcs-targ.fits' cadence data file")
+    parser.add_argument('pixelmap_file', nargs=1,
+                        help="path to the '*_lcm.fits' "
+                             "pixel mapping reference file")
+    args = parser.parse_args(args)
+
+    factory = FullFrameImageFactory(args.cadence_file[0],
+                                    args.pixelmap_file[0])
+    factory.write_ffi()
+
+
 if __name__ == "__main__":
     # Example use
     cadence_files = "../sandbox/filenames-short.txt"
@@ -415,5 +542,5 @@ if __name__ == "__main__":
     factory = TargetPixelFileFactory(cadence_files, pixel_mapping)
     # Get an arbitrary target_id
     target_id = list(factory.pixel_mapping.targets.keys())[5]
-    #factory.write_tpf(target_id)
-    factory.write_all_tpfs()
+    factory.write_tpf(target_id)
+    #factory.write_all_tpfs()

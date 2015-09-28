@@ -3,7 +3,8 @@ from setuptools import setup
 
 # Command-line tools
 entry_points = {'console_scripts': [
-    'kadenza-tpf = kadenza.kadenza:kadenza_tpf_main'
+    'kadenza-tpf = kadenza.kadenza:kadenza_tpf_main',
+    'kadenza-ffi = kadenza.kadenza:kadenza_ffi_main'
 ]}
 
 setup(name='kadenza',
