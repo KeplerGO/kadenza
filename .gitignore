@@ -58,3 +58,5 @@ target/
 
 # Custom additions
 sandbox/
+*.fits
+*.fits.gz
