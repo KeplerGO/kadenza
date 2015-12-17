@@ -17,7 +17,7 @@ setup(name='kadenza',
       license='MIT',
       packages=['kadenza'],
       install_requires=['numpy',
-                        'astropy'],
+                        'astropy>=1.1'],
       entry_points=entry_points,
       classifiers=[
           "Development Status :: 5 - Production/Stable",
