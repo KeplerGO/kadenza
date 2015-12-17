@@ -67,7 +67,7 @@ class PixelMappingFile():
             Row numbers for the pixels indexed by pixel_idx.
 
         column : `np.ndarray`
-            Column number for  the pixels indexed by pixel_idx.
+            Column number for the pixels indexed by pixel_idx.
         """
         fts = fits.open(self.filename)
         ext = self.targets[target_id]['ext']
@@ -117,12 +117,11 @@ class TargetPixelFileFactory(object):
         basename = os.path.basename(self.cadence_pixel_files[-1])
         lastcad = re.sub('_lcs-targ.fits', '', basename).strip('kplr')
         if output_fn is None:
-            output_fn = 'mod{}.{}_kplr{:09d}-{}_lpd-targ.fits'.format(
-                            self.pixel_mapping.targets[target_id]['module'],
-                            self.pixel_mapping.targets[target_id]['output'],
+            output_fn = 'ch{0}_kplr{1:09d}_{2}_lpd-targ.fits'.format(
+                            self.pixel_mapping.targets[target_id]['channel'],
                             target_id,
                             lastcad)
-        log.debug("Writing {}".format(output_fn))
+        log.info("Writing {}".format(output_fn))
         self.make_tpf(target_id).writeto(output_fn,
                                          clobber=True,
                                          checksum=True)
@@ -203,7 +202,7 @@ class TargetPixelFileFactory(object):
                 i, j = ccd2mask(1, 1, crval1p, crval2p,
                                 1, 1, column_coords[idx], row_coords[idx])
                 raw_cnts[cad_idx, j, i] = raw[pixel_idx[idx]]
-                flux[cad_idx, j, i] = raw[pixel_idx[idx]]
+                #flux[cad_idx, j, i] = raw[pixel_idx[idx]]
                 flux_err[cad_idx, j, i] = np.sqrt(raw[pixel_idx[idx]])
 
             # Remember a few keywords we'll need for the header
@@ -222,6 +221,7 @@ class TargetPixelFileFactory(object):
                 meanblck = cadfile[channel].header['MEANBLCK']
 
             cadfile.close()
+            del cadfile
 
         # Turn the data arrays into fits columns and initialize the HDU
         coldim = '({},{})'.format(dcol, drow)
@@ -521,11 +521,15 @@ def kadenza_tpf_main(args=None):
                         help="only produce a TPF file "
                              "for a specific EPIC/KIC target_id")
     parser.add_argument('cadencefile_list', nargs=1,
-                        help="path to a text file that lists "
-                             "the '*_lcs-targ.fits' cadence data files to use")
+                        help="Path to a text file that lists the cadence data "
+                             "files to use (one file per line). "
+                             "These files are named '*_lcs-targ.fits' for "
+                             "long cadence and '*_scs-targ.fits' for short "
+                             "cadence.")
     parser.add_argument('pixelmap_file', nargs=1,
-                        help="path to the '*_lcm.fits' "
-                             "pixel mapping reference file")
+                        help="Path to the pixel mapping reference file. "
+                             "This file is named '*_lcm.fits' for long "
+                             "cadence and '*_scm.fits' for short cadence.")
     args = parser.parse_args(args)
 
     # Allow cadence file to be given rather than a list
@@ -559,7 +563,7 @@ def kadenza_ffi_main(args=None):
 
 if __name__ == "__main__":
     # Example use
-    cadence_files = "../sandbox/filenames-short.txt"
+    cadence_files = "../sandbox/filenames.txt"
     pixel_mapping = "../sandbox/pixel-mappings/kplr2009115065205-013-013_lcm.fits"
     factory = TargetPixelFileFactory(cadence_files, pixel_mapping)
     # Get an arbitrary target_id
