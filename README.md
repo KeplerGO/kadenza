@@ -1,7 +1,7 @@
 # Kadenza: Kepler/K2 Cadence Data Reader 
 ***Converts raw cadence data from the Kepler spacecraft into astronomer-friendly FITS files.***
 
-[![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+[![Travis status](https://travis-ci.org/KeplerGO/kadenza.svg)](https://travis-ci.org/KeplerGO/kadenza) [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 
 Kadenza allows the raw cadence pixel data from the Kepler space telescope
 to be inspected as soon as they arrive on Earth;
