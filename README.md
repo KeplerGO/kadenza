@@ -1,7 +1,7 @@
 # Kadenza: Kepler/K2 Cadence Data Reader 
 ***Converts raw cadence data from the Kepler spacecraft into astronomer-friendly FITS files.***
 
-[![Travis status](https://travis-ci.org/KeplerGO/kadenza.svg)](https://travis-ci.org/KeplerGO/kadenza) [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+[![Travis status](https://travis-ci.org/KeplerGO/kadenza.svg)](https://travis-ci.org/KeplerGO/kadenza) [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/) [![DOI](https://zenodo.org/badge/10301/KeplerGO/kadenza.svg)](https://zenodo.org/badge/latestdoi/10301/KeplerGO/kadenza)
 
 Kadenza allows the raw cadence pixel data from the Kepler space telescope
 to be inspected as soon as they arrive on Earth;
@@ -90,3 +90,18 @@ To report bugs and request features, please use the [issue tracker](https://gith
 ### License
 Kadenza is made available under the MIT License.
 For details see the LICENSE file.
+
+## Citation
+
+`kadenza` was created by Geert Barentsen for NASA's Kepler/K2 Guest Observer Office.
+If this tool aided your research, please cite it using the [DOI identifier](http://dx.doi.org/10.5281/zenodo.45051) or the following BibTeX entry:
+```
+@misc{geert_barentsen_2016_45051,
+  author       = {Geert Barentsen},
+  title        = {kadenza: v1.0.0},
+  month        = jan,
+  year         = 2016,
+  doi          = {10.5281/zenodo.45051},
+  url          = {http://dx.doi.org/10.5281/zenodo.45051}
+}
+```
