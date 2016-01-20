@@ -91,7 +91,7 @@ To report bugs and request features, please use the [issue tracker](https://gith
 Kadenza is made available under the MIT License.
 For details see the LICENSE file.
 
-## Citation
+### Citation
 
 `kadenza` was created by Geert Barentsen for NASA's Kepler/K2 Guest Observer Office.
 If this tool aided your research, please cite it using the [DOI identifier](http://dx.doi.org/10.5281/zenodo.45051) or the following BibTeX entry:
