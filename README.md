@@ -18,7 +18,7 @@ at this stage.
 Kadenza can be used both as a command-line tool or using its Python API.
 
 
-### Example use
+### Example
 
 For K2 Campaign 9, the [data archive at MAST](https://archive.stsci.edu/pub/k2/) provides access to the raw *cadence data files*.
 There is one such file per long cadence,
@@ -78,7 +78,8 @@ $ python setup.py install
 Kadenza has only been tested under Linux with Python 3.4 at present.
 Support for legacy Python will be added soon.
 
-### Using kadenza
+
+### Usage
 ```
 $ kadenza-tpf --help
 usage: kadenza-tpf [-h] [-t [target_id]] cadencefile_list pixelmap_file
