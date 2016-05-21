@@ -1,5 +1,4 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-__version__ = "1.0"
-
+from .version import __version__
 from .kadenza import *

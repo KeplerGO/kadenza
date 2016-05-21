@@ -1,5 +1,14 @@
 #!/usr/bin/env python
+import os
+import sys
 from setuptools import setup
+
+if "publish" in sys.argv[-1]:
+    os.system("python setup.py sdist upload")
+    sys.exit()
+
+# Load the __version__ variable without importing the package already
+exec(open('kadenza/version.py').read())
 
 # Command-line tools
 entry_points = {'console_scripts': [
@@ -8,7 +17,7 @@ entry_points = {'console_scripts': [
 ]}
 
 setup(name='kadenza',
-      version='1.0.0',
+      version=__version__,
       description="Converts raw cadence data from the Kepler spacecraft "
                   "into astronomer-friendly FITS files.",
       long_description=open('README.md').read(),
