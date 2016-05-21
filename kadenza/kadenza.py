@@ -14,6 +14,8 @@ from astropy import log
 from astropy.io import fits
 from astropy.utils.console import ProgressBar
 
+from . import __version__
+
 
 class PixelMappingFile():
     """Wraps a Kepler Pixel Mapping Reference file.
@@ -140,9 +142,10 @@ class TargetPixelFileFactory(object):
         for kw in tmpl:
             hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
         # Override the defaults where necessary
+        hdu.header['ORIGIN'] = "Unofficial data product"
         hdu.header['DATE'] = datetime.datetime.now().strftime("%Y-%m-%d")
         hdu.header['CREATOR'] = "kadenza"
-        hdu.header['PROCVER'] = "1.0"
+        hdu.header['PROCVER'] = "{}".format(__version__)
         hdu.header['FILEVER'] = "0.0"
         hdu.header['OBJECT'] = target_name(target_id)
         hdu.header['KEPLERID'] = target_id
@@ -393,9 +396,9 @@ class FullFrameImageFactory(object):
         if output_fn is None:
             basename = os.path.basename(self.cadence_pixel_file)
             if "lcs-targ" in basename:
-                output_fn = basename.replace("lcs-targ", "ffi")
+                output_fn = basename.replace("lcs-targ", "sparse_ffi_raw")
             else:
-                output_fn = "cadence-ffi.fits"
+                output_fn = "sparse_cadence_ffi_raw.fits"
         log.info("Writing {}".format(output_fn))
         self.make_ffi().writeto(output_fn, clobber=True, checksum=True)
 
@@ -406,6 +409,11 @@ class FullFrameImageFactory(object):
         tmpl = self.get_header_template(0)
         for i, kw in enumerate(tmpl):
             hdu0.header[kw] = (tmpl[kw], tmpl.comments[kw])
+        # Override the primary extension defaults
+        hdu0.header['ORIGIN'] = "Unofficial data product"
+        hdu0.header['DATE'] = datetime.datetime.now().strftime("%Y-%m-%d")
+        hdu0.header['CREATOR'] = "kadenza"
+        hdu0.header['PROCVER'] = "{}".format(__version__)
 
         hdulist = fits.HDUList(hdu0)
 
@@ -489,7 +497,6 @@ class FullFrameImageFactory(object):
         incpf.close()
         inpmrf.close()
         return hdulist
-
 
 
 """ Helper functions """
