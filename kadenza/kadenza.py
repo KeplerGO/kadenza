@@ -119,10 +119,7 @@ class TargetPixelFileFactory(object):
         basename = os.path.basename(self.cadence_pixel_files[-1])
         lastcad = re.sub('_lcs-targ.fits', '', basename).strip('kplr')
         if output_fn is None:
-            output_fn = 'ch{0}_kplr{1:09d}_{2}_lpd-targ.fits'.format(
-                            self.pixel_mapping.targets[target_id]['channel'],
-                            target_id,
-                            lastcad)
+            output_fn = 'ktwo{:09d}-kadenza-lpd-targ.fits.gz'.format(target_id)
         log.info("Writing {}".format(output_fn))
         self.make_tpf(target_id).writeto(output_fn,
                                          clobber=True,
@@ -554,8 +551,12 @@ def kadenza_tpf_main(args=None):
 
 def kadenza_ffi_main(args=None):
     parser = argparse.ArgumentParser(
-                description="Turns a raw Kepler Cadence Data file into "
-                            "an uncalibrated Full Frame Image (FFI).")
+                description="Converts a raw Kepler Cadence Data file into "
+                            "an uncalibrated, sparse Full Frame Image (FFI). "
+                            "The output file contains 84 image extensions "
+                            "which correspond to the different Kepler CCDs. "
+                            "The units are counts and all unobserved pixels "
+                            "are set to -1.")
     parser.add_argument('cadence_file', nargs=1,
                         help="path to the '*_lcs-targ.fits' cadence data file")
     parser.add_argument('pixelmap_file', nargs=1,
