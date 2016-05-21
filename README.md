@@ -11,23 +11,61 @@ to enable time-critical data analyses to be carried out quickly.
 The primary motivation for creating this tool is to
 enable the K2 Campaign 9 microlensing science team to use the raw
 spacecraft data to identify microlensing events as soon as possible.
-It also enables access to the dithering data which was obtained during
-the original comissioning of the Kepler mission.
 Most users of Kepler/K2 data will not require this tool however,
-because it does ***not*** produce properly calibrated files.
+because it does ***not*** produce fully-calibrated data products
+at this stage.
 
 Kadenza can be used both as a command-line tool or using its Python API.
 
-### Example
-Convert the raw cadence data into TPF files:
+
+### Example use
+
+For K2 Campaign 9, the [data archive at MAST](https://archive.stsci.edu/pub/k2/) provides access to the raw *cadence data files*.
+There is one such file per long cadence,
+named `kplrYYYYDDDHHMMSS_lcs-targ.fits`,
+which provides the pixel counts in that cadence
+for all those pixels which were pre-selected to be downlinked
+from the spacecraft (roughly 3% of the 95-megapixel camera).
+The timestamp that is recorded in the filename
+refers to the end of the long cadence,
+which is a period of 0.4904h during which the spacecraft
+summed 270 exposures of 6.02s each.
+
+To reconstruct two-dimensional images from the cadence data files,
+we need an additional file called the *pixel mapping reference file*.
+This file specifies the (column, row) CCD coordinates for each value
+in the one-dimensional cadence data arrays.
+This information is kept in a separate file to avoid having to repeat
+the pixel coordinates in each cadence file.
+For K2 Campaign 9a the mapping file you need is called
+`kplr2016068153039-085-085_lcm.fits` and can be obtained from the archive. 
+
+One you have obtained the raw data, you can then use Kadenza
+to convert them into two-dimensional images.
+Once intalled (see below), Kadenza adds the `kadenza-ffi` tool
+to your command-line which you simply call as follows:
+```
+$ kadenza-ffi cadence-data-file pixel-mapping-file
+``` 
+
+In our example, we'd execute:
+```
+$ kadenza-ffi kplrYYYYDDDHHMMSS_lcs-targ.fits kplr2016068153039-085-085_lcm.fits
+```
+
+This will create a new file called `kplrYYYYDDDHHMMSS_kadenza_ffi_raw.fits`
+which is a FITS file with 84 image extensions, 
+each corresponding to the different Kepler CCD channels.
+The units are counts and unobserved pixels are set to "-1".
+Timestamps refer to the end of each cadence can be obtained from the
+filename or the DATE-END keyword in the header.
+
+You can also convert the raw cadence data into TPF files using `kadenza-tpf`,
+e.g.:
 ```
 $ kadenza-tpf --target 200049143 cadence-data-list.txt pixel-mapping-file.fits
 ```
 
-Produce a sparse FFI frame for a given channel:
-```
-$ kadenza-ffi cadence-data-file.fits pixel-mapping-file.fits
-``` 
 
 ### Installation
 If you have a working installation of Python on your system,
@@ -94,7 +132,8 @@ For details see the LICENSE file.
 ### Citation
 
 `kadenza` was created by Geert Barentsen for NASA's Kepler/K2 Guest Observer Office.
-If this tool aided your research, please cite it using the [DOI identifier](http://dx.doi.org/10.5281/zenodo.45051) or the following BibTeX entry:
+If this tool aided your research, please consider offering co-authorship
+to the Kepler/K2 team, or at the very least, cite this tool using the [DOI identifier](http://dx.doi.org/10.5281/zenodo.45051) or the following BibTeX entry:
 ```
 @misc{geert_barentsen_2016_45051,
   author       = {Geert Barentsen},
