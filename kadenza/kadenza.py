@@ -396,7 +396,7 @@ class FullFrameImageFactory(object):
         if output_fn is None:
             basename = os.path.basename(self.cadence_pixel_file)
             if "lcs-targ" in basename:
-                output_fn = basename.replace("lcs-targ", "sparse_ffi_raw")
+                output_fn = basename.replace("lcs-targ", "kadenza_ffi_raw")
             else:
                 output_fn = "sparse_cadence_ffi_raw.fits"
         log.info("Writing {}".format(output_fn))
@@ -450,8 +450,8 @@ class FullFrameImageFactory(object):
             f = incpf[ext].data.field('orig_value')[:]
 
             # initialize FFI image
-            ffimage = np.zeros((1070, 1132), dtype="float32")
-            ffimage[:, :] = np.nan
+            ffimage = np.zeros((1070, 1132), dtype="int32")
+            ffimage[:, :] = -1
 
             # populate FFI image
             for i in range(len(k)):
