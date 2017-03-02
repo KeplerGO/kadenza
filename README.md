@@ -75,8 +75,7 @@ $ git clone https://github.com/KeplerGO/kadenza.git
 $ cd kadenza
 $ python setup.py install
 ```
-Kadenza has only been tested under Linux with Python 3.4 at present.
-Support for legacy Python will be added soon.
+Kadenza has only been tested under Linux with Python 3 at present.
 
 
 ### Usage
