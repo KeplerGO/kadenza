@@ -15,6 +15,7 @@ from astropy.io import fits
 from astropy.utils.console import ProgressBar
 
 from . import __version__
+from . import calibration
 
 
 class PixelMappingFile():
@@ -402,6 +403,10 @@ class FullFrameImageFactory(object):
     def _make_hdulist(self):
         hdu0 = fits.PrimaryHDU()
 
+        # open the Cadence Pixel File and Pixel Mapping File
+        incpf = fits.open(self.cadence_pixel_file, memmap=True)
+        inpmrf = fits.open(self.pixel_mapping_file, memmap=True)
+
         # Set the header with defaults
         tmpl = self.get_header_template(0)
         for i, kw in enumerate(tmpl):
@@ -411,12 +416,10 @@ class FullFrameImageFactory(object):
         hdu0.header['DATE'] = datetime.datetime.now().strftime("%Y-%m-%d")
         hdu0.header['CREATOR'] = "kadenza"
         hdu0.header['PROCVER'] = "{}".format(__version__)
-
+        hdu0.header['LCFXDOFF'] = incpf[0].header['LCFXDOFF']
+        hdu0.header['SCFXDOFF'] = incpf[0].header['SCFXDOFF']
+        hdu0.header['DATATYPE'] = incpf[0].header['DATATYPE']
         hdulist = fits.HDUList(hdu0)
-
-        # open the Cadence Pixel File and Pixel Mapping File
-        incpf = fits.open(self.cadence_pixel_file, memmap=True)
-        inpmrf = fits.open(self.pixel_mapping_file, memmap=True)
 
         # grab the dates and times from the header
         card = incpf[0].header
@@ -430,6 +433,13 @@ class FullFrameImageFactory(object):
         telapse = tstop - tstart
         exposure = telapse * deadc
 
+        if hdu0.header['DATATYPE'].strip() == 'long cadence':
+            fixed_offset = hdu0.header['LCFXDOFF']
+            nreadout = 270
+        else:
+            fixed_offset = hdu0.header['SCFXDOFF']  # short cadence
+            nreadout = 9
+
         for ext in ProgressBar(range(1, 85)):
             card = incpf[ext].header
             gain = card['GAIN']
@@ -438,13 +448,25 @@ class FullFrameImageFactory(object):
             meanblck = card['MEANBLCK']
 
             card = inpmrf[ext].header
-            chankey = card['CHANNEL']
+            channel = card['CHANNEL']
             modkey = card['MODULE']
             outkey = card['OUTPUT']
             r = inpmrf[ext].data.field('row')[:]
             c = inpmrf[ext].data.field('column')[:]
             k = inpmrf[ext].data.field('target_id')[:]
-            f = incpf[ext].data.field('orig_value')[:]
+            # Convert the raw counts to Analog to Digital Units read off
+            # the photometer following the Kepler Archive Manual (p23).
+            # This is necessary because the spacecraft software subtracts
+            # a mean black value from each channel to have the pixel values
+            # of all channels center around zero, so that a single compression
+            # table can be used to compress all pixel values.
+            # However to avoid negative values, a large positive offset value
+            # ('LCFXDOFF' or 'SCFXDOFF') is then added that lifts the pixel
+            # values to a level that matches the range in the compression
+            # table designed for the pixel counts.
+            pixelvalues_adu = (incpf[ext].data.field('orig_value')[:]
+                               + nreadout*meanblck
+                               - fixed_offset)
 
             # initialize FFI image
             ffimage = np.zeros((1070, 1132), dtype="int32")
@@ -452,7 +474,22 @@ class FullFrameImageFactory(object):
 
             # populate FFI image
             for i in range(len(k)):
-                ffimage[r[i], c[i]] = f[i]
+                ffimage[r[i], c[i]] = pixelvalues_adu[i]
+
+            # subtract the smear
+            EXAMPLE_COLLATERAL = '/home/gb/proj/c9a-raw/c9_raw_cadence_data/kplr2016113182947_lcs-col.fits'
+            EXAMPLE_COLLATERAL_MAPPING = '/home/gb/dev/kadenza/kadenza/tests/data/kplr2016068153039-000-000_lcc.fits'
+            collat = calibration.CollateralData(EXAMPLE_COLLATERAL, EXAMPLE_COLLATERAL_MAPPING)
+            mask_observed = ffimage != -1
+
+            print(np.mean(ffimage[mask_observed]))
+            ffimage[mask_observed] = ffimage[mask_observed] - collat.black_frame(channel)[mask_observed]
+            print(np.mean(collat.black_frame(channel)[mask_observed]))
+            print(np.mean(ffimage[mask_observed]))
+
+            ffimage[mask_observed] = ffimage[mask_observed] - collat.smear_frame(channel)[mask_observed]
+            print(np.mean(collat.smear_frame(channel)[mask_observed]))
+            print(np.mean(ffimage[mask_observed]))
 
             # create image extension headers
             hdu = fits.ImageHDU(ffimage)
@@ -463,7 +500,7 @@ class FullFrameImageFactory(object):
                 hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
             # Overrides:
             hdu.header['EXTNAME'] = 'MOD.OUT %d.%d' % (modkey, outkey)
-            hdu.header['CHANNEL'] = chankey
+            hdu.header['CHANNEL'] = channel
             hdu.header['MODULE'] = modkey
             hdu.header['OUTPUT'] = outkey
             hdu.header['MJDSTART'] = startkey
