@@ -121,9 +121,12 @@ class TargetPixelFileFactory(object):
         if output_fn is None:
             output_fn = 'ktwo{:09d}-kadenza-lpd-targ.fits.gz'.format(target_id)
         log.info("Writing {}".format(output_fn))
-        self.make_tpf(target_id).writeto(output_fn,
-                                         clobber=True,
-                                         checksum=True)
+        try:
+            self.make_tpf(target_id).writeto(output_fn,
+                                             clobber=True,
+                                             checksum=True)
+        except MemoryError:
+            print('MemoryError: {}'.format(output_fn))
 
     def write_all_tpfs(self):
         """Produce TPF files for all targets in the cadence data."""
@@ -194,7 +197,7 @@ class TargetPixelFileFactory(object):
             cadfile = fits.open(fn)
             mjd[cad_idx] = cadfile[0].header['MID_TIME']
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
-            cadenceno[cad_idx] = cadfile[0].header['LC_COUNT']
+            cadenceno[cad_idx] = cadfile[0].header['LC_INTER']
 
             raw = cadfile[channel].data['orig_value'][:]
 
