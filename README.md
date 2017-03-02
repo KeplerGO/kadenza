@@ -1,7 +1,8 @@
 # Kadenza: Kepler/K2 Cadence Data Reader 
 ***Converts raw cadence data from the Kepler spacecraft into astronomer-friendly FITS files.***
 
-[![Travis status](https://travis-ci.org/KeplerGO/kadenza.svg)](https://travis-ci.org/KeplerGO/kadenza) [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/) [![DOI](https://zenodo.org/badge/10301/KeplerGO/kadenza.svg)](https://zenodo.org/badge/latestdoi/10301/KeplerGO/kadenza)
+[![Travis status](https://travis-ci.org/KeplerGO/kadenza.svg)](https://travis-ci.org/KeplerGO/kadenza) [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.344973.svg)](https://doi.org/10.5281/zenodo.344973)
 
 Kadenza allows the raw cadence pixel data from the Kepler space telescope
 to be inspected as soon as they arrive on Earth;
@@ -133,14 +134,14 @@ For details see the LICENSE file.
 
 `kadenza` was created by Geert Barentsen for NASA's Kepler/K2 Guest Observer Office.
 If this tool aided your research, please consider offering co-authorship
-to the Kepler/K2 team, or at the very least, cite this tool using the [DOI identifier](http://dx.doi.org/10.5281/zenodo.45051) or the following BibTeX entry:
+to the Kepler/K2 team, or at the very least, cite this tool using the [DOI identifier](https://doi.org/10.5281/zenodo.344973) or the following BibTeX entry:
 ```
-@misc{geert_barentsen_2016_45051,
+@misc{geert_barentsen_2017_344973,
   author       = {Geert Barentsen},
-  title        = {kadenza: v1.0.0},
-  month        = jan,
-  year         = 2016,
-  doi          = {10.5281/zenodo.45051},
-  url          = {http://dx.doi.org/10.5281/zenodo.45051}
+  title        = {KeplerGO/kadenza: v2.0.2},
+  month        = mar,
+  year         = 2017,
+  doi          = {10.5281/zenodo.344973},
+  url          = {https://doi.org/10.5281/zenodo.344973}
 }
 ```
