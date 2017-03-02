@@ -81,6 +81,21 @@ Support for legacy Python will be added soon.
 
 ### Usage
 ```
+$ kadenza-ffi --help
+usage: kadenza-ffi [-h] cadence_file pixelmap_file
+
+Turns a raw Kepler Cadence Data file into an uncalibrated Full Frame Image
+(FFI).
+
+positional arguments:
+  cadence_file   path to the '*_lcs-targ.fits' cadence data file
+  pixelmap_file  path to the '*_lcm.fits' pixel mapping reference file
+
+optional arguments:
+  -h, --help     show this help message and exit
+```
+
+```
 $ kadenza-tpf --help
 usage: kadenza-tpf [-h] [-t [target_id]] cadencefile_list pixelmap_file
 
@@ -96,21 +111,6 @@ optional arguments:
   -t [target_id], --target [target_id]
                         only produce a TPF file for a specific EPIC/KIC
                         target_id
-```
-
-```
-$ kadenza-ffi --help
-usage: kadenza-ffi [-h] cadence_file pixelmap_file
-
-Turns a raw Kepler Cadence Data file into an uncalibrated Full Frame Image
-(FFI).
-
-positional arguments:
-  cadence_file   path to the '*_lcs-targ.fits' cadence data file
-  pixelmap_file  path to the '*_lcm.fits' pixel mapping reference file
-
-optional arguments:
-  -h, --help     show this help message and exit
 ```
 
 ### Caveats
