@@ -15,6 +15,7 @@ from astropy.io import fits
 from astropy.utils.console import ProgressBar
 
 from . import __version__
+from . import calibration
 
 
 class PixelMappingFile():
@@ -116,8 +117,6 @@ class TargetPixelFileFactory(object):
 
     def write_tpf(self, target_id, output_fn=None):
         """Creates and writes a TPF file to disk."""
-        basename = os.path.basename(self.cadence_pixel_files[-1])
-        lastcad = re.sub('_lcs-targ.fits', '', basename).strip('kplr')
         if output_fn is None:
             output_fn = 'ktwo{:09d}-kadenza-lpd-targ.fits.gz'.format(target_id)
         log.info("Writing {}".format(output_fn))
@@ -195,20 +194,8 @@ class TargetPixelFileFactory(object):
         for cad_idx, fn in enumerate(self.cadence_pixel_files):
             log.debug("Opening {}".format(fn))
             cadfile = fits.open(fn)
-            mjd[cad_idx] = cadfile[0].header['MID_TIME']
-            time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
-            cadenceno[cad_idx] = cadfile[0].header['LC_INTER']
 
-            raw = cadfile[channel].data['orig_value'][:]
-
-            for idx in range(len(row_coords)):
-                i, j = ccd2mask(1, 1, crval1p, crval2p,
-                                1, 1, column_coords[idx], row_coords[idx])
-                raw_cnts[cad_idx, j, i] = raw[pixel_idx[idx]]
-                #flux[cad_idx, j, i] = raw[pixel_idx[idx]]
-                flux_err[cad_idx, j, i] = np.sqrt(raw[pixel_idx[idx]])
-
-            # Remember a few keywords we'll need for the header
+            # If this is the first file; remember a few keywords we'll need later
             if cad_idx == 0:
                 dateobs = cadfile[0].header['DATE-OBS']
                 timeobs = cadfile[0].header['TIME-OBS']
@@ -222,6 +209,36 @@ class TargetPixelFileFactory(object):
                 readnois = cadfile[channel].header['READNOIS']
                 timslice = cadfile[channel].header['TIMSLICE']
                 meanblck = cadfile[channel].header['MEANBLCK']
+                int_time = cadfile[channel].header['INT_TIME']
+
+            # Determine the raw pixel count offsets and number of readouts
+            if cadfile[0].header['DATATYPE'].strip() == 'long cadence':
+                fixed_offset = cadfile[0].header['LCFXDOFF']
+                nreadout = 270
+            else:
+                fixed_offset = cadfile[0].header['SCFXDOFF']  # short cadence
+                nreadout = 9
+
+            # Populate cadence time and number
+            mjd[cad_idx] = cadfile[0].header['MID_TIME']
+            time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
+            cadenceno[cad_idx] = cadfile[0].header['LC_INTER']
+
+            # Determine pixel values
+            pixelvalues_raw = cadfile[channel].data['orig_value'][:]
+            pixelvalues_adu = calibration.raw_counts_to_adu(pixelvalues_raw,
+                                                            fixed_offset, meanblck, nreadout)
+            # Rough calibration: uses mean black instead of observed black!
+            exposure_time = int_time * nreadout
+            pixelvalues_flux = (pixelvalues_adu - nreadout*meanblck) * gain / exposure_time
+
+            # Populate pixel arrays
+            for idx in range(len(row_coords)):
+                i, j = ccd2mask(1, 1, crval1p, crval2p,
+                                1, 1, column_coords[idx], row_coords[idx])
+                raw_cnts[cad_idx, j, i] = pixelvalues_raw[pixel_idx[idx]]
+                flux[cad_idx, j, i] = pixelvalues_flux[pixel_idx[idx]]
+                flux_err[cad_idx, j, i] = np.sqrt(pixelvalues_flux[pixel_idx[idx]])
 
             cadfile.close()
             del cadfile
