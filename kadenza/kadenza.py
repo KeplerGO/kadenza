@@ -118,7 +118,7 @@ class TargetPixelFileFactory(object):
     def write_tpf(self, target_id, output_fn=None):
         """Creates and writes a TPF file to disk."""
         if output_fn is None:
-            output_fn = 'ktwo{:09d}-kadenza-lpd-targ.fits.gz'.format(target_id)
+            output_fn = 'ktwo{:09d}-unofficial-lpd-targ.fits'.format(target_id)
         log.info("Writing {}".format(output_fn))
         try:
             self.make_tpf(target_id).writeto(output_fn,
