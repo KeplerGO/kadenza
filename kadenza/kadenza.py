@@ -122,7 +122,7 @@ class TargetPixelFileFactory(object):
         log.info("Writing {}".format(output_fn))
         try:
             self.make_tpf(target_id).writeto(output_fn,
-                                             clobber=True,
+                                             overwrite=True,
                                              checksum=True)
         except MemoryError:
             print('MemoryError: {}'.format(output_fn))
@@ -201,6 +201,7 @@ class TargetPixelFileFactory(object):
                 timeobs = cadfile[0].header['TIME-OBS']
                 lcfxdoff = cadfile[0].header['LCFXDOFF']
                 scfxdoff = cadfile[0].header['SCFXDOFF']
+                int_time = cadfile[0].header['INT_TIME']
                 crpix1 = cadfile[channel].header['CRPIX1']
                 crpix2 = cadfile[channel].header['CRPIX2']
                 crval1 = cadfile[channel].header['CRVAL1']
@@ -209,7 +210,6 @@ class TargetPixelFileFactory(object):
                 readnois = cadfile[channel].header['READNOIS']
                 timslice = cadfile[channel].header['TIMSLICE']
                 meanblck = cadfile[channel].header['MEANBLCK']
-                int_time = cadfile[channel].header['INT_TIME']
 
             # Determine the raw pixel count offsets and number of readouts
             if cadfile[0].header['DATATYPE'].strip() == 'long cadence':
@@ -417,7 +417,7 @@ class FullFrameImageFactory(object):
             else:
                 output_fn = "sparse_cadence_ffi_raw.fits"
         log.info("Writing {}".format(output_fn))
-        self.make_ffi().writeto(output_fn, clobber=True, checksum=True)
+        self.make_ffi().writeto(output_fn, overwrite=True, checksum=True)
 
     def _make_hdulist(self):
         hdu0 = fits.PrimaryHDU()
