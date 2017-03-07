@@ -193,7 +193,11 @@ class TargetPixelFileFactory(object):
         channel = self.pixel_mapping.targets[target_id]['channel']
         for cad_idx, fn in enumerate(self.cadence_pixel_files):
             log.debug("Opening {}".format(fn))
-            cadfile = fits.open(fn)
+            try:
+                cadfile = fits.open(fn)
+            except IOError as e:
+                log.warning('WARNING: Could not open {}: {}'.format(fn, e))
+                continue  # try opening the next cadence file
 
             # If this is the first file; remember a few keywords we'll need later
             if cad_idx == 0:
