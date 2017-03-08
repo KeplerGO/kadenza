@@ -13,6 +13,7 @@ import numpy as np
 from astropy import log
 from astropy.io import fits
 from astropy.utils.console import ProgressBar
+from tqdm import tqdm
 
 from . import __version__
 from . import calibration
@@ -191,7 +192,7 @@ class TargetPixelFileFactory(object):
 
         # Open the cadence data files and copy data across
         channel = self.pixel_mapping.targets[target_id]['channel']
-        for cad_idx, fn in enumerate(self.cadence_pixel_files):
+        for cad_idx, fn in tqdm(enumerate(self.cadence_pixel_files), desc='Reading cadences', total=len(self.cadence_pixel_files)):
             log.debug("Opening {}".format(fn))
             try:
                 cadfile = fits.open(fn)
