@@ -220,14 +220,17 @@ class TargetPixelFileFactory(object):
             if cadfile[0].header['DATATYPE'].strip() == 'long cadence':
                 fixed_offset = cadfile[0].header['LCFXDOFF']
                 nreadout = 270
+                # Long cadence number
+                cadenceno[cad_idx] = cadfile[0].header['LC_INTER']
             else:
                 fixed_offset = cadfile[0].header['SCFXDOFF']  # short cadence
                 nreadout = 9
+                # Short cadence number
+                cadenceno[cad_idx] = cadfile[0].header['SC_INTER']
 
             # Populate cadence time and number
-            mjd[cad_idx] = cadfile[0].header['MID_TIME']
+            mjd[cad_idx] = (cadfile[1].header['BSTRTIME'] + cadfile[1].header['BSTPTIME']) / 2.
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
-            cadenceno[cad_idx] = cadfile[0].header['LC_INTER']
 
             # Determine pixel values
             pixelvalues_raw = cadfile[channel].data['orig_value'][:]
