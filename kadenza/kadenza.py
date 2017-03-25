@@ -576,6 +576,8 @@ def kadenza_tpf_main(args=None):
                         help="Path to the pixel mapping reference file. "
                              "This file is named '*_lcm.fits' for long "
                              "cadence and '*_scm.fits' for short cadence.")
+    parser.add_argument('correct_smear', nargs=1,
+                        default=False)
     args = parser.parse_args(args)
 
     # Allow cadence file to be given rather than a list
