@@ -130,7 +130,7 @@ class TargetPixelFileFactory(object):
         log.info("Writing {}".format(output_fn))
         try:
             self.make_tpf(target_id).writeto(output_fn,
-                                             overwrite=True,
+                                             clobber=True,
                                              checksum=True)
         except MemoryError:
             print('MemoryError: {}'.format(output_fn))
@@ -239,19 +239,16 @@ class TargetPixelFileFactory(object):
             mjd[cad_idx] = (cadfile[1].header['BSTRTIME'] + cadfile[1].header['BSTPTIME']) / 2.
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
 
+            # Determine pixel values
+            pixelvalues_raw = cadfile[channel].data['orig_value'][:]
+            pixelvalues_adu = calibration.raw_counts_to_adu(pixelvalues_raw,
+                                                            fixed_offset, meanblck, nreadout)
             # Get smear values
             if self.correct_smear:
                 colldata = calibration.CollateralData(self.collateral_files[cad_idx],
                                                   self.collateral_mapping_fn)
                 smear_values = colldata.get_smear_at_columns(column_coords, channel)
-            else:
-                smear_values = 0.0
-
-            # Determine pixel values
-            pixelvalues_raw = cadfile[channel].data['orig_value'][:]
-            pixelvalues_adu = calibration.raw_counts_to_adu(pixelvalues_raw,
-                                                            fixed_offset, meanblck, nreadout)
-            pixelvalues_adu -= smear_values
+                pixelvalues_adu -= smear_values
             # Rough calibration: uses mean black instead of observed black!
             exposure_time = int_time * nreadout
             pixelvalues_flux = (pixelvalues_adu - nreadout*meanblck) * gain / exposure_time
