@@ -27,3 +27,8 @@ sandbox/
 *.fits.gz
 *.png
 
+# Mac OSX
+.DS_Store
+
+# VIM
+.*.swp
