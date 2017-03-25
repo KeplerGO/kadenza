@@ -574,7 +574,10 @@ def kadenza_tpf_main(args=None):
                         help="Path to the pixel mapping reference file. "
                              "This file is named '*_lcm.fits' for long "
                              "cadence and '*_scm.fits' for short cadence.")
-    parser.add_argument('--correct-smear', action='store_true')
+    parser.add_argument('--correct-smear', action='store_true',
+                        help="this option applies smear correction to the "
+                             "pixel values. A file *000-000_lcc.fits must be "
+                             "in the same directory of the raw cadence file.")
     args = parser.parse_args(args)
 
     # Allow cadence file to be given rather than a list
@@ -605,7 +608,10 @@ def kadenza_ffi_main(args=None):
     parser.add_argument('pixelmap_file', nargs=1,
                         help="path to the '*_lcm.fits' "
                              "pixel mapping reference file")
-    parser.add_argument('--correct-smear', action='store_true')
+    parser.add_argument('--correct-smear', action='store_true',
+                        help="this option applies smear correction to the "
+                             "pixel values. A file *000-000_lcc.fits must be "
+                             "in the same directory of the raw cadence file.")
     args = parser.parse_args(args)
 
     factory = FullFrameImageFactory(args.cadence_file[0],
