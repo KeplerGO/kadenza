@@ -91,8 +91,8 @@ class CollateralData(object):
         columns: list-like of integers
         """
         columns = list(columns)
-        mask = self.mapping[channel].data['col_pixel_type'][columns] == PIXELTYPE['Masked']
-        smear_at_columns = raw_counts_to_adu(self.collateral[channel].data['orig_value'][mask],
+        mask = self.mapping[channel].data['col_pixel_type'] == PIXELTYPE['Masked']
+        smear_at_columns = raw_counts_to_adu(self.collateral[channel].data['orig_value'][mask][columns],
                                             fixed_offset=self.fixed_offset,
                                             meanblck=self.collateral[channel].header['MEANBLCK'],
                                             nreadout=self.nreadout)
