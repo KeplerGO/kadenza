@@ -88,7 +88,7 @@ class CollateralData(object):
 
     def get_smear_at_columns(self, columns, channel):
         """
-        colnums : list-like of integers
+        columns: list-like of integers
         """
         columns = list(columns)
         mask = self.mapping[channel].data['col_pixel_type'][columns] == PIXELTYPE['Masked']
