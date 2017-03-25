@@ -241,7 +241,7 @@ class TargetPixelFileFactory(object):
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
 
             # Get smear values
-            colldata = CollateralData(self.collateral_mapping_files[cad_idx],
+            colldata = calibration.CollateralData(self.collateral_mapping_files[cad_idx],
                                       self.collateral_mapping_fn)
             smear_values = colldata.get_smear_at_columns(column_coords, channel)
 
