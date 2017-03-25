@@ -19,7 +19,7 @@ from . import __version__
 from . import calibration
 
 
-class PixelMappingFile():
+class PixelMappingFile(object):
     """Wraps a Kepler Pixel Mapping Reference file.
 
     A pixel mapping reference file describes the relationship between the
@@ -93,13 +93,24 @@ class TargetPixelFileFactory(object):
     pixel_mapping_file : str
         Path to the pixel mapping file.
     """
-    def __init__(self, cadence_pixel_files, pixel_mapping_file):
+    def __init__(self, cadence_pixel_files, pixel_mapping_file, correct_smear=False):
         if type(cadence_pixel_files) is str:
             filenames = [fn.strip() for fn
                          in open(cadence_pixel_files, "r").readlines()]
             self.cadence_pixel_files = filenames
+            if correct_smear:
+                self.collateral_mapping_files = ([fn.replace('-targ.fits',
+                                                             '-col.fits')
+                                                  for fn in filenames])
+            else:
+                self.collateral_mapping_files = None
         else:
             self.cadence_pixel_files = cadence_pixel_files
+            if correct_smear:
+                self.collateral_mapping_files = cadence_pixel_files.replace('-targ.fits',
+                                                                            '-col.fits')
+            else:
+                self.collateral_mapping_files = None
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
         self.no_cadences = len(self.cadence_pixel_files)
 
@@ -589,6 +600,8 @@ def kadenza_ffi_main(args=None):
     parser.add_argument('pixelmap_file', nargs=1,
                         help="path to the '*_lcm.fits' "
                              "pixel mapping reference file")
+    parser.add_argument('correct_smear', nargs=1,
+                        default=False)
     args = parser.parse_args(args)
 
     factory = FullFrameImageFactory(args.cadence_file[0],
