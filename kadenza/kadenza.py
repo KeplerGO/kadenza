@@ -98,19 +98,14 @@ class TargetPixelFileFactory(object):
             filenames = [fn.strip() for fn
                          in open(cadence_pixel_files, "r").readlines()]
             self.cadence_pixel_files = filenames
-            if correct_smear:
-                self.collateral_mapping_files = ([fn.replace('-targ.fits',
-                                                             '-col.fits')
-                                                  for fn in filenames])
-            else:
-                self.collateral_mapping_files = None
         else:
             self.cadence_pixel_files = cadence_pixel_files
-            if correct_smear:
-                self.collateral_mapping_files = cadence_pixel_files.replace('-targ.fits',
-                                                                            '-col.fits')
-            else:
-                self.collateral_mapping_files = None
+        if correct_smear:
+            self.collateral_mapping_files = ([fn.replace('-targ.fits',
+                                                             '-col.fits')
+                                                  for fn in filenames])
+        else:
+            self.collateral_mapping_files = None
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
         self.no_cadences = len(self.cadence_pixel_files)
 
