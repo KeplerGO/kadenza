@@ -105,7 +105,7 @@ class TargetPixelFileFactory(object):
             self.collateral_files = ([fn.replace('-targ.fits',
                                                   '-col.fits')
                                       for fn in self.cadence_pixel_files])
-            self.collateral_mapping_fn = pixel_mapping_file[:18] + '000-000-lcc.fits'
+            self.collateral_mapping_fn = pixel_mapping_file[:18] + '000-000_lcc.fits'
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
         self.no_cadences = len(self.cadence_pixel_files)
 
@@ -239,7 +239,7 @@ class TargetPixelFileFactory(object):
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
 
             # Determine pixel values
-            pixelvalues_raw = cadfile[channel].data['orig_value'][:]
+            pixelvalues_raw = cadfile[channel].data['orig_value'][:][pixel_idx]
             pixelvalues_adu = calibration.raw_counts_to_adu(pixelvalues_raw,
                                                             fixed_offset, meanblck, nreadout)
             # Get smear values
@@ -247,7 +247,7 @@ class TargetPixelFileFactory(object):
                 colldata = calibration.CollateralData(self.collateral_files[cad_idx],
                                                   self.collateral_mapping_fn)
                 smear_values = colldata.get_smear_at_columns(column_coords, channel)
-                pixelvalues_adu -= smear_values
+                pixelvalues_adu = pixelvalues_adu - smear_values
             # Rough calibration: uses mean black instead of observed black!
             exposure_time = int_time * nreadout
             pixelvalues_flux = (pixelvalues_adu - nreadout*meanblck) * gain / exposure_time
@@ -257,9 +257,9 @@ class TargetPixelFileFactory(object):
 
                 i, j = ccd2mask(1, 1, crval1p, crval2p,
                                 1, 1, column_coords[idx], row_coords[idx])
-                raw_cnts[cad_idx, j, i] = pixelvalues_raw[pixel_idx[idx]]
-                flux[cad_idx, j, i] = pixelvalues_flux[pixel_idx[idx]]
-                flux_err[cad_idx, j, i] = np.sqrt(pixelvalues_flux[pixel_idx[idx]])
+                raw_cnts[cad_idx, j, i] = pixelvalues_raw[idx]
+                flux[cad_idx, j, i] = pixelvalues_flux[idx]
+                flux_err[cad_idx, j, i] = np.sqrt(pixelvalues_flux[idx])
 
             cadfile.close()
             del cadfile
