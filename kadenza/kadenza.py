@@ -105,8 +105,7 @@ class TargetPixelFileFactory(object):
             self.collateral_files = ([fn.replace('-targ.fits',
                                                   '-col.fits')
                                       for fn in self.cadence_pixel_files])
-            self.collateral_mapping_fn =  pixel_mapping_file.replace('\?\?\?-\?\?\?-lcm',
-                                                                     '000-000-lcc.fits')
+            self.collateral_mapping_fn = pixel_mapping_file[:18] + '000-000-lcc.fits'
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
         self.no_cadences = len(self.cadence_pixel_files)
 
@@ -584,7 +583,10 @@ def kadenza_tpf_main(args=None):
     else:
         cflist = args.cadencefile_list[0]
     factory = TargetPixelFileFactory(cflist,
-                                     args.pixelmap_file[0])
+                                     args.pixelmap_file[0],
+                                     correct_smear=args.correct_smear)
+    print("correct_smear: {}".format(args.correct_smear))
+
     if args.target is None:
         factory.write_all_tpfs()
     else:
