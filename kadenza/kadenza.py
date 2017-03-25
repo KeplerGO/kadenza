@@ -94,20 +94,19 @@ class TargetPixelFileFactory(object):
         Path to the pixel mapping file.
     """
     def __init__(self, cadence_pixel_files, pixel_mapping_file, correct_smear=False):
+        self.correct_smear = correct_smear
         if type(cadence_pixel_files) is str:
             filenames = [fn.strip() for fn
                          in open(cadence_pixel_files, "r").readlines()]
             self.cadence_pixel_files = filenames
         else:
             self.cadence_pixel_files = cadence_pixel_files
-        if correct_smear:
+        if self.correct_smear:
             self.collateral_files = ([fn.replace('-targ.fits',
                                                   '-col.fits')
                                       for fn in self.cadence_pixel_files])
             self.collateral_mapping_fn =  pixel_mapping_file.replace('\?\?\?-\?\?\?-lcm',
                                                                      '000-000-lcc.fits')
-        else:
-            self.collateral_files = None
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
         self.no_cadences = len(self.cadence_pixel_files)
 
@@ -241,9 +240,12 @@ class TargetPixelFileFactory(object):
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
 
             # Get smear values
-            colldata = calibration.CollateralData(self.collateral_mapping_files[cad_idx],
-                                      self.collateral_mapping_fn)
-            smear_values = colldata.get_smear_at_columns(column_coords, channel)
+            if self.correct_smear:
+                colldata = calibration.CollateralData(self.collateral_files[cad_idx],
+                                                  self.collateral_mapping_fn)
+                smear_values = colldata.get_smear_at_columns(column_coords, channel)
+            else:
+                smear_values = 0.0
 
             # Determine pixel values
             pixelvalues_raw = cadfile[channel].data['orig_value'][:]
