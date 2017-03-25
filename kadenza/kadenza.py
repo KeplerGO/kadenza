@@ -101,11 +101,13 @@ class TargetPixelFileFactory(object):
         else:
             self.cadence_pixel_files = cadence_pixel_files
         if correct_smear:
-            self.collateral_mapping_files = ([fn.replace('-targ.fits',
-                                                             '-col.fits')
-                                                  for fn in filenames])
+            self.collateral_files = ([fn.replace('-targ.fits',
+                                                  '-col.fits')
+                                      for fn in self.cadence_pixel_files])
+            self.collateral_mapping_fn =  pixel_mapping_file.replace('\?\?\?-\?\?\?-lcm',
+                                                                     '000-000-lcc.fits')
         else:
-            self.collateral_mapping_files = None
+            self.collateral_files = None
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
         self.no_cadences = len(self.cadence_pixel_files)
 
@@ -238,16 +240,23 @@ class TargetPixelFileFactory(object):
             mjd[cad_idx] = (cadfile[1].header['BSTRTIME'] + cadfile[1].header['BSTPTIME']) / 2.
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
 
+            # Get smear values
+            colldata = CollateralData(self.collateral_mapping_files[cad_idx],
+                                      self.collateral_mapping_fn)
+            smear_values = colldata.get_smear_at_columns(column_coords, channel)
+
             # Determine pixel values
             pixelvalues_raw = cadfile[channel].data['orig_value'][:]
             pixelvalues_adu = calibration.raw_counts_to_adu(pixelvalues_raw,
                                                             fixed_offset, meanblck, nreadout)
+            pixelvalues_adu -= smear_values
             # Rough calibration: uses mean black instead of observed black!
             exposure_time = int_time * nreadout
             pixelvalues_flux = (pixelvalues_adu - nreadout*meanblck) * gain / exposure_time
 
             # Populate pixel arrays
             for idx in range(len(row_coords)):
+
                 i, j = ccd2mask(1, 1, crval1p, crval2p,
                                 1, 1, column_coords[idx], row_coords[idx])
                 raw_cnts[cad_idx, j, i] = pixelvalues_raw[pixel_idx[idx]]
