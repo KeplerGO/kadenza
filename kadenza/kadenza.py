@@ -479,8 +479,7 @@ class FullFrameImageFactory(object):
             ffimage[:, :] = -1
 
             # populate FFI image
-            for i in range(len(k)):
-                ffimage[r[i], c[i]] = f[i]
+            ffimage[r[:len(k)], c[:len(k)]] = f[:len(k)]
 
             # create image extension headers
             hdu = fits.ImageHDU(ffimage)
