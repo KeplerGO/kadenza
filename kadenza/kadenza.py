@@ -585,7 +585,6 @@ def kadenza_tpf_main(args=None):
     factory = TargetPixelFileFactory(cflist,
                                      args.pixelmap_file[0],
                                      correct_smear=args.correct_smear)
-    print("correct_smear: {}".format(args.correct_smear))
 
     if args.target is None:
         factory.write_all_tpfs()
