@@ -86,6 +86,19 @@ class CollateralData(object):
             frame[:, columns[idx]] = smear_values[idx]
         return frame
 
+    def get_smear_at_columns(self, columns, channel):
+        """
+        columns: list-like of integers
+        """
+        columns = list(columns)
+        mask = self.mapping[channel].data['col_pixel_type'] == PIXELTYPE['Masked']
+        smear_at_columns = raw_counts_to_adu(self.collateral[channel].data['orig_value'][mask][np.array(columns) - 12],
+                                            fixed_offset=self.fixed_offset,
+                                            meanblck=self.collateral[channel].header['MEANBLCK'],
+                                            nreadout=self.nreadout)
+        smear_at_columns = smear_at_columns / self.collateral[0].header['NROWMASK']
+        return smear_at_columns
+
     def save_smear(self, channel, output_fn='smear.fits'):
         smear = self.smear_frame(channel)
         print('Writing {}'.format(output_fn))

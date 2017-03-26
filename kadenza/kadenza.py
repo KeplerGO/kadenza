@@ -19,7 +19,7 @@ from . import __version__
 from . import calibration
 
 
-class PixelMappingFile():
+class PixelMappingFile(object):
     """Wraps a Kepler Pixel Mapping Reference file.
 
     A pixel mapping reference file describes the relationship between the
@@ -93,13 +93,19 @@ class TargetPixelFileFactory(object):
     pixel_mapping_file : str
         Path to the pixel mapping file.
     """
-    def __init__(self, cadence_pixel_files, pixel_mapping_file):
+    def __init__(self, cadence_pixel_files, pixel_mapping_file, correct_smear=False):
+        self.correct_smear = correct_smear
         if type(cadence_pixel_files) is str:
             filenames = [fn.strip() for fn
                          in open(cadence_pixel_files, "r").readlines()]
             self.cadence_pixel_files = filenames
         else:
             self.cadence_pixel_files = cadence_pixel_files
+        if self.correct_smear:
+            self.collateral_files = ([fn.replace('-targ.fits',
+                                                  '-col.fits')
+                                      for fn in self.cadence_pixel_files])
+            self.collateral_mapping_fn = pixel_mapping_file[:18] + '000-000_lcc.fits'
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
         self.no_cadences = len(self.cadence_pixel_files)
 
@@ -123,7 +129,7 @@ class TargetPixelFileFactory(object):
         log.info("Writing {}".format(output_fn))
         try:
             self.make_tpf(target_id).writeto(output_fn,
-                                             overwrite=True,
+                                             clobber=True,
                                              checksum=True)
         except MemoryError:
             print('MemoryError: {}'.format(output_fn))
@@ -233,20 +239,27 @@ class TargetPixelFileFactory(object):
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
 
             # Determine pixel values
-            pixelvalues_raw = cadfile[channel].data['orig_value'][:]
+            pixelvalues_raw = cadfile[channel].data['orig_value'][:][pixel_idx]
             pixelvalues_adu = calibration.raw_counts_to_adu(pixelvalues_raw,
                                                             fixed_offset, meanblck, nreadout)
+            # Get smear values
+            if self.correct_smear:
+                colldata = calibration.CollateralData(self.collateral_files[cad_idx],
+                                                  self.collateral_mapping_fn)
+                smear_values = colldata.get_smear_at_columns(column_coords, channel)
+                pixelvalues_adu = pixelvalues_adu - smear_values
             # Rough calibration: uses mean black instead of observed black!
             exposure_time = int_time * nreadout
             pixelvalues_flux = (pixelvalues_adu - nreadout*meanblck) * gain / exposure_time
 
             # Populate pixel arrays
             for idx in range(len(row_coords)):
+
                 i, j = ccd2mask(1, 1, crval1p, crval2p,
                                 1, 1, column_coords[idx], row_coords[idx])
-                raw_cnts[cad_idx, j, i] = pixelvalues_raw[pixel_idx[idx]]
-                flux[cad_idx, j, i] = pixelvalues_flux[pixel_idx[idx]]
-                flux_err[cad_idx, j, i] = np.sqrt(pixelvalues_flux[pixel_idx[idx]])
+                raw_cnts[cad_idx, j, i] = pixelvalues_raw[idx]
+                flux[cad_idx, j, i] = pixelvalues_flux[idx]
+                flux_err[cad_idx, j, i] = np.sqrt(pixelvalues_flux[idx])
 
             cadfile.close()
             del cadfile
@@ -479,8 +492,7 @@ class FullFrameImageFactory(object):
             ffimage[:, :] = -1
 
             # populate FFI image
-            for i in range(len(k)):
-                ffimage[r[i], c[i]] = f[i]
+            ffimage[r[:len(k)], c[:len(k)]] = f[:len(k)]
 
             # create image extension headers
             hdu = fits.ImageHDU(ffimage)
@@ -562,6 +574,10 @@ def kadenza_tpf_main(args=None):
                         help="Path to the pixel mapping reference file. "
                              "This file is named '*_lcm.fits' for long "
                              "cadence and '*_scm.fits' for short cadence.")
+    parser.add_argument('--correct-smear', action='store_true',
+                        help="this option applies smear correction to the "
+                             "pixel values. A file *000-000_lcc.fits must be "
+                             "in the same directory of the raw cadence file.")
     args = parser.parse_args(args)
 
     # Allow cadence file to be given rather than a list
@@ -570,7 +586,9 @@ def kadenza_tpf_main(args=None):
     else:
         cflist = args.cadencefile_list[0]
     factory = TargetPixelFileFactory(cflist,
-                                     args.pixelmap_file[0])
+                                     args.pixelmap_file[0],
+                                     correct_smear=args.correct_smear)
+
     if args.target is None:
         factory.write_all_tpfs()
     else:
@@ -590,6 +608,10 @@ def kadenza_ffi_main(args=None):
     parser.add_argument('pixelmap_file', nargs=1,
                         help="path to the '*_lcm.fits' "
                              "pixel mapping reference file")
+    parser.add_argument('--correct-smear', action='store_true',
+                        help="this option applies smear correction to the "
+                             "pixel values. A file *000-000_lcc.fits must be "
+                             "in the same directory of the raw cadence file.")
     args = parser.parse_args(args)
 
     factory = FullFrameImageFactory(args.cadence_file[0],
