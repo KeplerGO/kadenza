@@ -122,10 +122,13 @@ class TargetPixelFileFactory(object):
             tpf.append(ext)
         return tpf
 
-    def write_tpf(self, target_id, output_fn=None):
+    def write_tpf(self, target_id, output_fn=None, overwrite=False):
         """Creates and writes a TPF file to disk."""
         if output_fn is None:
             output_fn = 'ktwo{:09d}-unofficial-tpf.fits'.format(target_id)
+        if not overwrite and os.path.exists(output_fn):
+            log.info("File already exists, skipping {}".format(output_fn))
+            return
         log.info("Writing {}".format(output_fn))
         try:
             self.make_tpf(target_id).writeto(output_fn,
@@ -195,6 +198,9 @@ class TargetPixelFileFactory(object):
         quality = np.zeros((self.no_cadences), dtype='int')
         pos_corr1 = np.zeros((self.no_cadences), dtype='float32')
         pos_corr2 = np.zeros((self.no_cadences), dtype='float32')
+
+        tpf_ext1_template = self.get_header_template(1)
+        tpf_ext2_template = self.get_header_template(2)
 
         # Open the cadence data files and copy data across
         channel = self.pixel_mapping.targets[target_id]['channel']
@@ -298,11 +304,10 @@ class TargetPixelFileFactory(object):
         hdu = fits.BinTableHDU.from_columns(coldefs)
 
         # Set the header with defaults
-        tmpl = self.get_header_template(1)
-        for i, kw in enumerate(tmpl):
+        for i, kw in enumerate(tpf_ext1_template):
             if kw in ['XTENSION', 'KEPLERID', 'NAXIS1', 'NAXIS2']:
                 continue
-            hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
+            hdu.header[kw] = (tpf_ext1_template[kw], tpf_ext1_template.comments[kw])
         # Override the defaults where necessary
         for n in [5, 6, 7, 8, 9]:
             hdu.header["TFORM{}".format(n)] = eformat
@@ -386,9 +391,8 @@ class TargetPixelFileFactory(object):
         aper_hdu = fits.ImageHDU(mask)
 
         # Set the header from the template TPF again
-        tmpl = self.get_header_template(2)
-        for i, kw in enumerate(tmpl):
-            aper_hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
+        for i, kw in enumerate(tpf_ext2_template):
+            aper_hdu.header[kw] = (tpf_ext2_template[kw], tpf_ext2_template.comments[kw])
 
         aper_hdu.header['OBJECT'] = target_name(target_id)
         aper_hdu.header['KEPLERID'] = target_id
