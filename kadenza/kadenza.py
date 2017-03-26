@@ -234,33 +234,36 @@ class TargetPixelFileFactory(object):
                 # Short cadence number
                 cadenceno[cad_idx] = cadfile[0].header['SC_INTER']
 
-            # Populate cadence time and number
+            # Populate cadence time; ensure we use barycentric time keywords here
             mjd[cad_idx] = (cadfile[1].header['BSTRTIME'] + cadfile[1].header['BSTPTIME']) / 2.
             time[cad_idx] = mjd[cad_idx] + 2400000.5 - 2454833.0
 
             # Determine pixel values
-            pixelvalues_raw = cadfile[channel].data['orig_value'][:][pixel_idx]
+            pixelvalues_raw = cadfile[channel].data['orig_value'][pixel_idx]
             pixelvalues_adu = calibration.raw_counts_to_adu(pixelvalues_raw,
                                                             fixed_offset, meanblck, nreadout)
-            # Get smear values
+            # Correct smear
             if self.correct_smear:
                 colldata = calibration.CollateralData(self.collateral_files[cad_idx],
-                                                  self.collateral_mapping_fn)
-                smear_values = colldata.get_smear_at_columns(column_coords, channel)
-                pixelvalues_adu = pixelvalues_adu - smear_values
+                                                      self.collateral_mapping_fn)
+                smear_values_adu = colldata.get_smear_at_columns(column_coords, channel)
+                pixelvalues_adu = pixelvalues_adu - smear_values_adu
+
             # Rough calibration: uses mean black instead of observed black!
             exposure_time = int_time * nreadout
             pixelvalues_flux = (pixelvalues_adu - nreadout*meanblck) * gain / exposure_time
 
             # Populate pixel arrays
-            for idx in range(len(row_coords)):
+            aperture_cols, aperture_rows = ccd2mask(crpix1=1, crpix2=1,
+                                                    crval1=crval1p, crval2=crval2p,
+                                                    cdelt1=1, cdelt2=1,
+                                                    ccd_column_coords=column_coords,
+                                                    ccd_row_coords=row_coords)
+            raw_cnts[cad_idx, aperture_rows, aperture_cols] = pixelvalues_raw
+            flux[cad_idx, aperture_rows, aperture_cols] = pixelvalues_flux
+            flux_err[cad_idx, aperture_rows, aperture_cols] = np.sqrt(pixelvalues_flux)
 
-                i, j = ccd2mask(1, 1, crval1p, crval2p,
-                                1, 1, column_coords[idx], row_coords[idx])
-                raw_cnts[cad_idx, j, i] = pixelvalues_raw[idx]
-                flux[cad_idx, j, i] = pixelvalues_flux[idx]
-                flux_err[cad_idx, j, i] = np.sqrt(pixelvalues_flux[idx])
-
+            # Avoid memory leaks
             cadfile.close()
             del cadfile
 
@@ -547,10 +550,12 @@ def target_name(target_id):
 
 
 def ccd2mask(crpix1, crpix2, crval1, crval2,
-             cdelt1, cdelt2, ccd_column, ccd_row):
-    mask_column = (ccd_column - crval1) * cdelt1 + crpix1 - 1
-    mask_row = (ccd_row - crval2) * cdelt2 + crpix2 - 1
-    return mask_column, mask_row
+             cdelt1, cdelt2, ccd_column_coords, ccd_row_coords):
+    """Comverts pixel coordinates from the channel-wide reference frame
+    to the aperture mask reference frame."""
+    mask_col = (ccd_column_coords - crval1) * cdelt1 + crpix1 - 1
+    mask_row = (ccd_row_coords - crval2) * cdelt2 + crpix2 - 1
+    return mask_col, mask_row
 
 
 """ Command-line interface """
