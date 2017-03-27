@@ -82,8 +82,7 @@ class CollateralData(object):
         # The smear values of multiple rows are binned on board
         smear_values = smear_values / self.collateral[0].header['NROWMASK']
         columns = self.mapping[channel].data['pixel_offset'][mask]
-        for idx in range(len(smear_values)):
-            frame[:, columns[idx]] = smear_values[idx]
+        frame[:, columns] = smear_values
         return frame
 
     def get_smear_at_columns(self, columns, channel):
