@@ -68,8 +68,7 @@ class CollateralData(object):
         # The smear values of multiple rows are binned on board
         black_values = black_values / self.collateral[0].header['NCOLBLCK']
         rows = self.mapping[channel].data['pixel_offset'][mask]
-        for idx in range(len(black_values)):
-            frame[rows[idx], :] = black_values[idx]
+        frame[rows, :] = black_values
         return frame
 
     def smear_frame(self, channel):
@@ -82,13 +81,13 @@ class CollateralData(object):
         # The smear values of multiple rows are binned on board
         smear_values = smear_values / self.collateral[0].header['NROWMASK']
         columns = self.mapping[channel].data['pixel_offset'][mask]
-        for idx in range(len(smear_values)):
-            frame[:, columns[idx]] = smear_values[idx]
+        frame[:, columns] = smear_values
         return frame
 
     def get_smear_at_columns(self, columns, channel):
         """
-        columns: list-like of integers
+        columns : list-like of integers
+        channel : integer
         """
         columns = list(columns)
         mask = self.mapping[channel].data['col_pixel_type'] == PIXELTYPE['Masked']
