@@ -126,7 +126,7 @@ class TargetPixelFileFactory(object):
         """Creates and writes a TPF file to disk."""
         if output_fn is None:
             output_fn = 'ktwo{:09d}-unofficial-tpf.fits'.format(target_id)
-        if not overwrite and os.path.exists(output_fn):
+        if not overwrite and (os.path.exists(output_fn) or os.path.exists(output_fn+'.gz')):
             log.info("File already exists, skipping {}".format(output_fn))
             return
         log.info("Writing {}".format(output_fn))
