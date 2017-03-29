@@ -177,12 +177,12 @@ class TargetPixelFileFactory(object):
         crval2p = min(row_coords)
 
         # Initialize the data tables
-        raw_cnts = np.zeros((self.no_cadences, drow, dcol), dtype='int')
-        flux = np.zeros((self.no_cadences, drow, dcol), dtype='float32')
-        flux_err = np.zeros((self.no_cadences, drow, dcol), dtype='float32')
-        flux_bkg = np.zeros((self.no_cadences, drow, dcol), dtype='float32')
-        flux_bkg_err = np.zeros((self.no_cadences, drow, dcol), dtype='float32')
-        cosmic_rays = np.zeros((self.no_cadences, drow, dcol), dtype='float32')
+        raw_cnts = np.empty((self.no_cadences, drow, dcol), dtype='int')
+        flux = np.empty((self.no_cadences, drow, dcol), dtype='float32')
+        flux_err = np.empty((self.no_cadences, drow, dcol), dtype='float32')
+        flux_bkg = np.empty((self.no_cadences, drow, dcol), dtype='float32')
+        flux_bkg_err = np.empty((self.no_cadences, drow, dcol), dtype='float32')
+        cosmic_rays = np.empty((self.no_cadences, drow, dcol), dtype='float32')
 
         raw_cnts[:, :, :] = -1
         flux[:, :, :] = np.nan
