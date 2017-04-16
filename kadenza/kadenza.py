@@ -93,7 +93,8 @@ class TargetPixelFileFactory(object):
     pixel_mapping_file : str
         Path to the pixel mapping file.
     """
-    def __init__(self, cadence_pixel_files, pixel_mapping_file, correct_smear=False):
+    def __init__(self, cadence_pixel_files, pixel_mapping_file,
+                 correct_smear=False):
         self.correct_smear = correct_smear
         if type(cadence_pixel_files) is str:
             filenames = [fn.strip() for fn
@@ -304,10 +305,10 @@ class TargetPixelFileFactory(object):
         hdu = fits.BinTableHDU.from_columns(coldefs)
 
         # Set the header with defaults
-        for i, kw in enumerate(tpf_ext1_template):
-            if kw in ['XTENSION', 'KEPLERID', 'NAXIS1', 'NAXIS2']:
-                continue
-            hdu.header[kw] = (tpf_ext1_template[kw], tpf_ext1_template.comments[kw])
+        for kw in tpf_ext1_template:
+            if kw not in ['XTENSION', 'KEPLERID', 'NAXIS1', 'NAXIS2']:
+                hdu.header[kw] = (tpf_ext1_template[kw],
+                                  tpf_ext1_template.comments[kw])
         # Override the defaults where necessary
         for n in [5, 6, 7, 8, 9]:
             hdu.header["TFORM{}".format(n)] = eformat
@@ -391,8 +392,9 @@ class TargetPixelFileFactory(object):
         aper_hdu = fits.ImageHDU(mask)
 
         # Set the header from the template TPF again
-        for i, kw in enumerate(tpf_ext2_template):
-            aper_hdu.header[kw] = (tpf_ext2_template[kw], tpf_ext2_template.comments[kw])
+        for kw in tpf_ext2_template:
+            aper_hdu.header[kw] = (tpf_ext2_template[kw],
+                                   tpf_ext2_template.comments[kw])
 
         aper_hdu.header['OBJECT'] = target_name(target_id)
         aper_hdu.header['KEPLERID'] = target_id
@@ -452,7 +454,7 @@ class FullFrameImageFactory(object):
 
         # Set the header with defaults
         tmpl = self.get_header_template(0)
-        for i, kw in enumerate(tmpl):
+        for kw in tmpl:
             hdu0.header[kw] = (tmpl[kw], tmpl.comments[kw])
         # Override the primary extension defaults
         hdu0.header['ORIGIN'] = "Unofficial data product"
@@ -506,7 +508,7 @@ class FullFrameImageFactory(object):
 
             # Set the header with defaults
             tmpl = self.get_header_template(ext)
-            for i, kw in enumerate(tmpl):
+            for kw in tmpl:
                 hdu.header[kw] = (tmpl[kw], tmpl.comments[kw])
             # Overrides:
             hdu.header['EXTNAME'] = 'MOD.OUT %d.%d' % (modkey, outkey)
