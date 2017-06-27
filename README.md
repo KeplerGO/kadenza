@@ -61,8 +61,11 @@ The units are counts and unobserved pixels are set to "-1".
 Timestamps refer to the end of each cadence can be obtained from the
 filename or the DATE-END keyword in the header.
 
-You can also convert the raw cadence data into TPF files using `kadenza-tpf`,
-e.g.:
+You can also convert the raw cadence data into TPF files using `kadenza-tpf`, after creating a text file with the name of each cadence file. First create the file by:
+```
+find /location/where/you/downloaded/the/raw/data  -name '*lcs-targ.fits' | sort > raw-long-cadence-files.txt
+```
+And then convert the raw cadence data by:
 ```
 $ kadenza-tpf --target 200049143 cadence-data-list.txt pixel-mapping-file.fits
 ```
