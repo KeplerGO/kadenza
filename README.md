@@ -18,10 +18,22 @@ at this stage.
 
 Kadenza can be used both as a command-line tool or using its Python API.
 
+### Installation
+If you have a working installation of Python on your system,
+you can download and install the latest version as follows:
+```
+$ git clone https://github.com/KeplerGO/kadenza.git
+$ cd kadenza
+$ python setup.py install
+```
+Kadenza has only been tested under Linux with Python 3 at present.
 
-### Example
+### Usage
 
-For K2 Campaign 9, the [data archive at MAST](https://archive.stsci.edu/pub/k2/) provides access to the raw *cadence data files*.
+#### Example 1: Creating a (sparse) Full Frame Image
+
+For K2 Campaign 9, the [data archive at MAST](https://archive.stsci.edu/pub/k2/)
+provides access to the raw *cadence data files*.
 There is one such file per long cadence,
 named `kplrYYYYDDDHHMMSS_lcs-targ.fits`,
 which provides the pixel counts in that cadence
@@ -61,28 +73,41 @@ The units are counts and unobserved pixels are set to "-1".
 Timestamps refer to the end of each cadence can be obtained from the
 filename or the DATE-END keyword in the header.
 
-You can also convert the raw cadence data into TPF files using `kadenza-tpf`, after creating a text file with the name of each cadence file. First create the file by:
+
+#### Example 2: Creating a Target Pixel File
+
+You can also convert *all* the raw cadence data for a given campaign and target into a Target Pixel File (TPF) file using the `kadenza-tpf` tool.  For example, to create a Target Pixel File for the target with EPIC ID 247520207 observed in Campaign 13, you would first download all the cadence data, e.g. using `wget`:
 ```
-find /location/where/you/downloaded/the/raw/data  -name '*lcs-targ.fits' | sort > raw-long-cadence-files.txt
+$ wget -t1 -e robots=off --no-parent --continue --recursive https://archive.stsci.edu/pub/k2/raw_cadence_data/c13/
 ```
-And then convert the raw cadence data by:
+Next, create a text file which lists the paths of all the cadence files you downloaded sorted by filename, e.g. using `find`:
 ```
-$ kadenza-tpf --target 200049143 cadence-data-list.txt pixel-mapping-file.fits
+$ find /location/where/you/downloaded/the/raw/cadence/data -name '*lcs-targ.fits' | sort > raw-long-cadence-files.txt
 ```
 
-
-### Installation
-If you have a working installation of Python on your system,
-you can download and install the latest version as follows:
+Next, download the long cadence pixel mapping reference file from MAST:
 ```
-$ git clone https://github.com/KeplerGO/kadenza.git
-$ cd kadenza
-$ python setup.py install
+$ wget https://archive.stsci.edu/pub/k2/pmrfs/c13/kplr2017032193929-091-091_lcm.fits
 ```
-Kadenza has only been tested under Linux with Python 3 at present.
 
+And finally, run `kadenza-tpf` to create an *uncalibrated* target pixel file:
+```
+$ kadenza-tpf --target 247520207 raw-long-cadence-files.txt kplr2017032193929-091-091_lcm.fits
+```
 
-### Usage
+This will create an unofficial Target Pixel File called `ktwo247520207-unofficial-tpf.fits`.
+
+### Caveats
+
+There are two main caveats to be aware of:
+ * The present version does not set all header keywords exactly as they would
+   appear in an official product.  In particular, the WCS keywords are
+   untested.
+ * This tool does *not* calibrate the data, it merely serves to
+   transform the raw pixel counts into a FITS format that is similar to,
+   but not at all identical, to the official pipeline products.
+   
+### Commands provided
 ```
 $ kadenza-ffi --help
 usage: kadenza-ffi [-h] cadence_file pixelmap_file
@@ -115,16 +140,6 @@ optional arguments:
                         only produce a TPF file for a specific EPIC/KIC
                         target_id
 ```
-
-### Caveats
-
-There are two main caveats to be aware of:
- * The present version does not set all header keywords exactly as they would
-   appear in an official product.  In particular, the WCS keywords are
-   untested.
- * This tool does *not* calibrate the data at all, it merely serves to
-   transform the raw pixel counts into a FITS format that is similar to,
-   but not at all identical, to the official pipeline products.
 
 ### Contributing
 To report bugs and request features, please use the [issue tracker](https://github.com/KeplerGO/kadenza/issues) or open a pull request.
