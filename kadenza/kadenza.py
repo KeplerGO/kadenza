@@ -94,19 +94,18 @@ class TargetPixelFileFactory(object):
         Path to the pixel mapping file.
     """
     def __init__(self, cadence_pixel_files, pixel_mapping_file,
-                 correct_smear=False):
-        self.correct_smear = correct_smear
+                 collateral_mapping_file=None):
+        self.collateral_mapping_file = collateral_mapping_file
         if type(cadence_pixel_files) is str:
             filenames = [fn.strip() for fn
                          in open(cadence_pixel_files, "r").readlines()]
             self.cadence_pixel_files = filenames
         else:
             self.cadence_pixel_files = cadence_pixel_files
-        if self.correct_smear:
+        if collateral_mapping_file is not None:
             self.collateral_files = ([fn.replace('-targ.fits',
-                                                  '-col.fits')
+                                                 '-col.fits')
                                       for fn in self.cadence_pixel_files])
-            self.collateral_mapping_fn = pixel_mapping_file[:18] + '000-000_lcc.fits'
         self.pixel_mapping = PixelMappingFile(pixel_mapping_file)
         self.no_cadences = len(self.cadence_pixel_files)
 
@@ -250,9 +249,9 @@ class TargetPixelFileFactory(object):
             pixelvalues_adu = calibration.raw_counts_to_adu(pixelvalues_raw,
                                                             fixed_offset, meanblck, nreadout)
             # Correct smear
-            if self.correct_smear:
+            if self.collateral_mapping_file is not None:
                 colldata = calibration.CollateralData(self.collateral_files[cad_idx],
-                                                      self.collateral_mapping_fn)
+                                                      self.collateral_mapping_file)
                 smear_values_adu = colldata.get_smear_at_columns(column_coords, channel)
                 pixelvalues_adu = pixelvalues_adu - smear_values_adu
 
@@ -585,10 +584,11 @@ def kadenza_tpf_main(args=None):
                         help="Path to the pixel mapping reference file. "
                              "This file is named '*_lcm.fits' for long "
                              "cadence and '*_scm.fits' for short cadence.")
-    parser.add_argument('--correct-smear', action='store_true',
-                        help="this option applies smear correction to the "
-                             "pixel values. A file *000-000_lcc.fits must be "
-                             "in the same directory of the raw cadence file.")
+    parser.add_argument('--collateral', nargs=1, metavar="PATH",
+                        help="path to the collateral data mapping reference file. "
+                             "This file is named '*_lcc.fits' for long "
+                             "cadence and '*_scc.fits' for short cadence. "
+                             "The output will be smear-corrected if you provide this path.")
     args = parser.parse_args(args)
 
     # Allow cadence file to be given rather than a list
@@ -598,7 +598,7 @@ def kadenza_tpf_main(args=None):
         cflist = args.cadencefile_list[0]
     factory = TargetPixelFileFactory(cflist,
                                      args.pixelmap_file[0],
-                                     correct_smear=args.correct_smear)
+                                     collateral=args.collateral)
 
     if args.target is None:
         factory.write_all_tpfs()
@@ -617,12 +617,8 @@ def kadenza_ffi_main(args=None):
     parser.add_argument('cadence_file', nargs=1,
                         help="path to the '*_lcs-targ.fits' cadence data file")
     parser.add_argument('pixelmap_file', nargs=1,
-                        help="path to the '*_lcm.fits' "
+                        help="path to the '*_lcm.fits' (LC) or '*_scm.fits' (SC) "
                              "pixel mapping reference file")
-    parser.add_argument('--correct-smear', action='store_true',
-                        help="this option applies smear correction to the "
-                             "pixel values. A file *000-000_lcc.fits must be "
-                             "in the same directory of the raw cadence file.")
     args = parser.parse_args(args)
 
     factory = FullFrameImageFactory(args.cadence_file[0],
