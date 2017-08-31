@@ -598,7 +598,7 @@ def kadenza_tpf_main(args=None):
         cflist = args.cadencefile_list[0]
     factory = TargetPixelFileFactory(cflist,
                                      args.pixelmap_file[0],
-                                     collateral_mapping_file=args.collateral)
+                                     collateral_mapping_file=args.collateral[0])
 
     if args.target is None:
         factory.write_all_tpfs()
