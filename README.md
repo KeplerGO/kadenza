@@ -148,15 +148,21 @@ For details see the LICENSE file.
 ### Citation
 
 `kadenza` was created by Geert Barentsen for NASA's Kepler/K2 Guest Observer Office.
-If this tool aided your research, please consider offering co-authorship
-to the Kepler/K2 team, or at the very least, cite this tool using the [DOI identifier](https://doi.org/10.5281/zenodo.344973) or the following BibTeX entry:
+If this tool aided your research, please consider offering co-authorship to the authors,
+or at the very least, cite this tool using both the [DOI identifier](https://doi.org/10.5281/zenodo.344973)
+and the [ASCL entry](https://ascl.net/code/v/1891) using the following BibTeX entry:
+
 ```
-@misc{geert_barentsen_2017_344973,
-  author       = {Geert Barentsen},
-  title        = {KeplerGO/kadenza: v2.0.2},
-  month        = mar,
-  year         = 2017,
-  doi          = {10.5281/zenodo.344973},
-  url          = {https://doi.org/10.5281/zenodo.344973}
+@MISC{2018ascl.soft03005B,
+  author        = {{Barentsen}, Geert; {Cardoso}, José Vinícius de Miranda},
+  title         = "{Kadenza: Kepler/K2 Raw Cadence Data Reader}",
+  howpublished  = {Astrophysics Source Code Library},
+  year          = 2018,
+  month         = mar,
+  archivePrefix = "ascl",
+  adsurl        = {http://adsabs.harvard.edu/abs/2018ascl.soft03005B},
+  adsnote       = {Provided by the SAO/NASA Astrophysics Data System},
+  doi           = {10.5281/zenodo.344973},
+  url           = {https://doi.org/10.5281/zenodo.344973}
 }
 ```
