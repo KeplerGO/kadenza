@@ -147,7 +147,8 @@ For details see the LICENSE file.
 
 ### Citation
 
-`kadenza` was created by Geert Barentsen for NASA's Kepler/K2 Guest Observer Office.
+`kadenza` was created by [Geert Barentsen](https://github.com/barentsen)
+and [José Vinícius de Miranda Cardoso](https://github.com/mirca) for NASA's Kepler/K2 Guest Observer Office.
 If this tool aided your research, please consider offering co-authorship to the authors,
 or at the very least, cite this tool using both the [DOI identifier](https://doi.org/10.5281/zenodo.344973)
 and the [ASCL entry](https://ascl.net/code/v/1891) using the following BibTeX entry:
