@@ -154,12 +154,14 @@ and the [ASCL entry](https://ascl.net/code/v/1891) using the following BibTeX en
 
 ```
 @MISC{2018ascl.soft03005B,
-  author        = {{Barentsen}, Geert; {Cardoso}, José Vinícius de Miranda},
+  author        = {{Barentsen}, G. and {Cardoso}, J.~V.~d.~M.},
   title         = "{Kadenza: Kepler/K2 Raw Cadence Data Reader}",
+  keywords      = {Software },
   howpublished  = {Astrophysics Source Code Library},
   year          = 2018,
   month         = mar,
   archivePrefix = "ascl",
+  eprint        = {1803.005},
   adsurl        = {http://adsabs.harvard.edu/abs/2018ascl.soft03005B},
   adsnote       = {Provided by the SAO/NASA Astrophysics Data System},
   doi           = {10.5281/zenodo.344973},
