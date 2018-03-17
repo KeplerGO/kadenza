@@ -1,8 +1,10 @@
 # Kadenza: Kepler/K2 Cadence Data Reader 
 ***Converts raw cadence data from the Kepler spacecraft into astronomer-friendly FITS files.***
 
-[![Travis status](https://travis-ci.org/KeplerGO/kadenza.svg)](https://travis-ci.org/KeplerGO/kadenza) [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.344973.svg)](https://doi.org/10.5281/zenodo.344973)
+[![Travis status](https://travis-ci.org/KeplerGO/kadenza.svg)](https://travis-ci.org/KeplerGO/kadenza) [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/barentsen/k2flix/blob/master/LICENSE) [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.344973.svg)](https://doi.org/10.5281/zenodo.344973) [![ADS Bibcode](https://img.shields.io/badge/NASA%20ADS-2018ascl.soft03005B-blue.svg)](http://adsabs.harvard.edu/abs/2018ascl.soft03005B)
+
+
+    :target: 
 
 Kadenza enables time-critical data analyses to be carried out using NASA's Kepler Space Telescope
 by enabling users to convert the "level 0" raw data files into user-friendly Target Pixel Files.
